@@ -56,3 +56,13 @@
 用户“继续吧”授权只读工作人员预订列表/详情和统一后台导航。B在web.staffstay定义页面投影与独立虚构fixture，C业务包不变。编号/入住日/状态组合筛选、详情返回保留条件；实际管理写操作、收款/核对、库存释放和Q8范围仍归owner确认与实现。
 
 staff-booking-ui独立可选，dev-ui.sh显式启用；默认与dev-staff.sh默认不安装它。所有/admin/stays请求继续强制STAFF权限，未增加匿名例外。页面固定金额不是计价算法，展示状态不是团队公共状态机；真实列表分页/状态/授权等契约待A/C评审。
+
+## 2026-10-29：D 通知与持久化基础
+
+用户确认负责 D 的工作后，先落地不依赖未冻结跨模块 schema 的最小基础：Flyway、`reminder_schedule`、JDBC 提醒适配器、一天前提醒服务、邮件端口、默认 Mock adapter、可选调度器和 JaCoCo 报告。没有创建 Booking/Payment/Room/Member 表，没有接入真实邮件供应商，也没有声称完成 Q8 CR3。
+
+`bookingReference` 暂按最长 64 字符的不透明值保存，不建立外键。原因是 C 的 Booking 标识和生命周期尚未评审；等 C/D 确认后再决定数据库键、事件和取消/改期重排。相同 `(bookingReference, reminder kind)` 重复请求返回已有记录，内容不一致时显式冲突。
+
+邮件调用放在数据库事务之外。发送认领用 `status + version` 条件更新，失败可延迟重试，达到配置上限后进入 `FAILED`。定时派发默认关闭，避免本地开发误发；启用时仍使用 `MockEmailTransport`，除非 live adapter 经团队评审后另行接入。
+
+验证：Windows + Temurin JDK 17.0.20.1 + Maven 3.9.11，`scripts/maven.ps1 --batch-mode --no-transfer-progress verify` 为 BUILD SUCCESS，230 tests / 0 failures / 0 errors / 0 skipped，JaCoCo 总行覆盖率 95.05%，70% 门槛通过。尚未验证 MySQL 8、live email、Booking → Reminder 联调或崩溃后的 SENDING 租约恢复。

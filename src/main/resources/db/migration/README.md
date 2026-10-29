@@ -1,5 +1,11 @@
-# 数据库迁移预留
+# 数据库迁移
 
-D 负责在确认 schema 后选择并接入迁移工具，再添加真实迁移。当前没有 SQL 迁移、自动建表或 Flyway 依赖。
+D owns schema migrations through Flyway. Production-like schema changes must be immutable
+versioned SQL files reviewed with the affected module owners.
 
-不要把模板示例表或临时调试 SQL 当作已经确认的团队 schema。
+`V1__create_reminder_schedule.sql` is the first D-owned foundation migration. It stores
+idempotent one-day reminder schedules and dispatch state. It does not define Booking, Payment,
+Room, Member, or shared status tables; those schemas still require cross-module review.
+
+Local/dev/test and MySQL use the same migration path. Do not edit an applied migration in a
+shared branch; add a new version and document the compatibility or migration impact.

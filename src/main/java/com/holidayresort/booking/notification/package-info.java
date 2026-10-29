@@ -1,4 +1,4 @@
 /**
- * D owns reminders, scheduling and email integration.
+ * D owns one-day reminders, dispatch state, scheduling and provider-neutral email delivery.
  */
 package com.holidayresort.booking.notification;

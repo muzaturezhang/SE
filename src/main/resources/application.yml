@@ -36,3 +36,9 @@ app:
   timezone: Asia/Shanghai
   currency: CNY
   booking-hold-minutes: ${BOOKING_HOLD_MINUTES:15}
+notification:
+  dispatch-enabled: false
+  batch-size: 50
+  max-attempts: 3
+  retry-delay: 15m
+  dispatch-interval-ms: 60000

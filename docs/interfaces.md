@@ -201,3 +201,22 @@ State的WAITING/CONFIRMED/FAILED/REVIEW/EXPIRED只是展示投影，预订和支
 GET /admin/stays 支持reference/arrival/state；GET /admin/stays/{id}展示详情并只保留上述已知筛选字段用于返回，无任意next跳转。非法筛选400、缺记录404；no-store、转义保留。没有管理预订/支付POST；CSRF依旧启用。
 
 待A/C评审：真实员工身份与服务授权、列表可见范围/联系字段、分页/排序与查询上限、完整预订/支付状态映射、价格快照/优惠/房号和错误。真实变更/支付核对/取消/改期、事务与库存释放由C/D提供后另行接入。当前不能直接替换Mock后宣称业务集成完成。
+
+## 2026-10-29：D 通知与持久化基础草案
+
+Owner：D；评审人：A（配置/身份）、B（页面配置不影响）、C（Booking 标识与生命周期）。
+
+```java
+record ReminderRequest(String bookingReference, String recipientEmail, LocalDate checkInDate) {}
+ReminderSchedule scheduleOneDayReminder(ReminderRequest request);
+DispatchResult dispatchDue();
+```
+
+- `bookingReference` 是不透明字符串，最长 64 字符；当前不建 Booking 外键，因为 Booking schema 尚未冻结。
+- 当前只支持一天前提醒，`remindOnDate = checkInDate - 1 day`；入住日期必须晚于上海业务当天。
+- `(bookingReference, reminder kind)` 唯一。相同内容重复调用幂等；不同邮箱或入住日期返回 `CONFLICT`。
+- 状态为 `PENDING`、`SENDING`、`SENT`、`FAILED`，只属于通知调度，不是 Booking/Payment 的共享状态。
+- 邮件通过 `EmailTransport` 端口发送，默认 `MockEmailTransport`；没有 live provider，也不能在未配置时伪装发送成功。
+- 定时派发默认关闭；启用后仍需确认真实 provider、发送时间和重试上限。
+- Flyway `V1__create_reminder_schedule.sql` 只创建 `reminder_schedule`，不创建其他模块表。跨模块 schema 仍需 B/C/D 评审。
+- C 取消或改期后的提醒重排尚未实现；Q8 CR3 的三天前提醒也尚未实现。这两项不得在 Stage 4 报告中写成已完成。

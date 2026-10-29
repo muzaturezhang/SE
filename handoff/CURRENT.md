@@ -2,6 +2,13 @@
 
 更新时间：2026-10-30，Asia/Shanghai。B第一批Room查询、第二批房间管理、第三批预订流程UI、第四批账户/会员UI、第五批工作人员预订只读UI均已完成本地实现与开发验证。设计整理已新增Room类图/CRC、导航、查询交互、UI原则与团队接入材料。真实身份、Booking/Payment、会员规则和数据库仍未接入。
 
+## D 通知与持久化基础 2026-10-29
+
+用户确认承担 D 的工作后，本轮在本地分支 `codex/d-foundation` 增加 Flyway、`V1__create_reminder_schedule.sql`、JDBC 提醒仓储、一天前提醒服务、provider-neutral 邮件端口、默认 Mock 邮件适配器、opt-in 调度器和 JaCoCo 报告/70% 行覆盖率门槛。没有创建 Booking/Payment/Room/Member 业务表，没有接入真实邮件供应商，也没有实现 Q8 CR3 三天前提醒。
+
+实际验证：Windows、Temurin JDK 17.0.20.1、Maven 3.9.11；`.\scripts\maven.ps1 --batch-mode --no-transfer-progress verify` 为 BUILD SUCCESS，230 tests / 0 failures / 0 errors / 0 skipped；Flyway 在 H2 测试库成功应用 V1；JaCoCo 总行覆盖率 95.05%，通知包 86.72%，70% BUNDLE 门槛通过。详情见 `docs/d-persistence-notification-foundation.md` 和 `log/2026-10-29-d-foundation.md`。
+
+仍未验证 MySQL 8、真实邮件 provider、Booking → Reminder 事件联调、进程崩溃后的 SENDING 恢复和 provider 幂等。当前分支尚未推送或创建 PR；不要把这些结果写成最终 Test Report、Q5/Q7 用户测试或全系统验收证据。
 ## GitHub 连接状态
 
 2026-10-30已上传至https://github.com/muzaturezhang/SE：main与b-room-ui首推成功，初始源码提交e48af50，后续文档提交以git log/远端refs为准。当前B开发使用b-room-ui；main为团队启动版本。仅holiday-resort-booking为Git根，上层SE及课程资料不上传。
