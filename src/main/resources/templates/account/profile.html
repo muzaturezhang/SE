@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('个人中心 · 演示')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('account')}"></header>
+<nav th:replace="~{fragments/layout :: accountNav('profile')}"></nav>
+<main id="main-content" tabindex="-1" class="account-main"><aside th:replace="~{fragments/layout :: accountPreviewNote}"></aside>
+  <p class="admin-success" role="status" th:if="${accountMessage}" th:text="${accountMessage}"></p>
+  <div class="account-page-heading"><p class="section-label">YOUR HOLIDAY ACCOUNT</p><h1 th:text="'欢迎，' + ${profile.displayName}"></h1><p>您的账户资料与入住安排，汇集于此。</p><span class="stay-state">登录后页面示例 · 非真实身份</span></div>
+  <div class="account-profile-grid"><section class="account-profile-details"><h2>个人资料</h2><dl class="stay-facts"><div><dt>姓名</dt><dd th:text="${profile.displayName}"></dd></div><div><dt>联系邮箱</dt><dd th:text="${profile.email}"></dd></div><div><dt>账户状态</dt><dd>当前会话演示</dd></div></dl><p class="stay-help">这里将展示账号服务返回的本人资料；当前不修改真实账户。</p><form th:action="@{/preview/account/logout}" method="post"><button class="outline-button" type="submit">退出账户预览</button></form></section>
+    <section class="account-member-summary"><p class="section-label">MEMBERSHIP</p><h2>会员与权益</h2><span class="stay-state" th:text="${membership.state.label()} + ' · 默认示例'"></span><p>查看会员状态与有效期，了解开通和续费页面。</p><a class="text-link" th:href="@{/preview/account/membership}">查看会员页面 ↗</a></section>
+  </div>
+  <section class="account-stays-entry"><div><p class="section-label">YOUR NEXT STAY</p><h2>下一段假期，从这里开始</h2><p>查看预订记录，或重新选择心仪的居所与日期。</p><div class="account-entry-actions"><a class="solid-button" th:if="${bookingUiPreview == true}" th:href="@{/preview/stays}">我的预订 →</a><a class="text-link" th:href="@{/rooms#stay-search}">探索客房 ↗</a></div></div><img th:src="@{/images/coastal-retreat.jpg}" alt="绿植与露台相连的海岸度假居所" width="1400" height="996" loading="lazy"></section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

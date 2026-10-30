@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('账户预览不可用')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('account')}"></header>
+<nav th:replace="~{fragments/layout :: accountNav('error')}"></nav>
+<main id="main-content" tabindex="-1" class="account-main"><aside th:replace="~{fragments/layout :: accountPreviewNote}"></aside><section class="account-result"><p class="section-label">YOUR ACCOUNT</p><h1>账户预览不可用</h1><p role="alert" th:text="${accountError}"></p><a class="outline-button" th:href="@{/preview/account/login}">返回登录页面</a></section></main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

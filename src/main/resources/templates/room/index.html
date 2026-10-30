@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('客房与别墅')}"></head>
+<body data-page="rooms">
+  <header th:replace="~{fragments/layout :: header('rooms')}"></header>
+  <main id="main-content" tabindex="-1">
+    <section class="rooms-introduction">
+      <p class="section-label">STAY AT HOLIDAY</p><h1>客房与别墅</h1>
+      <p>庭院、露台与泳池。找到适合您的居所。</p>
+    </section>
+    <div th:replace="~{fragments/layout :: staySearch}"></div>
+    <section id="collection" class="room-collection section-space" aria-labelledby="collection-title">
+      <div class="search-errors" th:if="${not #lists.isEmpty(searchErrors)}" role="alert">
+        <h2>请检查查询条件</h2>
+        <ul><li th:each="message : ${searchErrors}" th:text="${message}"></li></ul>
+        <a class="text-link" href="#stay-search">修改查询条件 <span aria-hidden="true">↑</span></a>
+      </div>
+      <p class="stay-message" th:if="${searchPerformed}" role="status">
+        <span th:text="${staySearch.arrival}"></span> 至 <span th:text="${staySearch.departure}"></span>
+        · <span th:text="${stayNights}"></span> 晚 · <span th:text="${staySearch.rooms}"></span> 间
+        <span th:if="${not #lists.isEmpty(roomCards)}"> · 以下房型在所选期间有足够的可用房间。</span>
+        <span th:if="${#lists.isEmpty(roomCards)}"> · 暂未找到符合条件的房型。</span>
+      </p>
+      <div class="collection-heading">
+        <div><p class="section-label">OUR COLLECTION</p><h2 id="collection-title">居所一览</h2></div>
+        <label class="category-field" for="room-category">居所类型
+          <select id="room-category" name="roomType" form="stay-search-form" aria-label="居所类型">
+            <option value="all" th:selected="${staySearch.roomType == 'all'}">全部居所</option>
+            <option th:each="type : ${roomTypes}" th:value="${type.id}" th:text="${type.name}" th:selected="${staySearch.roomType == type.id}"></option>
+          </select>
+        </label>
+      </div>
+      <p class="preview-note">当前展示开发用示例房源，库存与基础价仅用于功能演示。</p>
+      <div class="room-list">
+        <article class="room-entry" th:each="card, position : ${roomCards}" th:attr="data-category=${card.type.id}">
+          <img th:src="${card.type.imagePath}" th:alt="${card.type.imageAlt}" width="1400" height="996" th:loading="${position.first ? 'eager' : 'lazy'}">
+          <div class="room-copy">
+            <p class="section-label" th:text="${#numbers.formatInteger(position.count, 2)} + ' / ' + ${card.type.englishName}"></p>
+            <h3 th:text="${card.type.name}"></h3>
+            <p class="room-description" th:text="${card.type.description}"></p>
+            <div class="room-features"><span th:each="feature : ${card.type.features}" th:text="${feature}"></span></div>
+            <div class="room-pricing">
+              <p class="room-rate">¥ <span th:text="${card.rateLabel}"></span><small> / 每间每晚</small></p>
+              <p class="room-availability" th:if="${card.availableRooms != null}">所选期间可用 <strong th:text="${card.availableRooms}"></strong> 间</p>
+              <p class="room-availability" th:if="${card.availableRooms == null}">选择日期查询可用数量</p>
+            </div>
+            <button class="text-link plain-button" type="button" th:attr="data-room-detail=${card.type.id}" aria-haspopup="dialog">查看居所 <span aria-hidden="true">↗</span></button>
+            <a class="outline-button room-preview-link" th:if="${bookingUiPreview == true and searchPerformed}" th:href="@{/preview/stays/new(roomType=${card.type.id},arrival=${staySearch.arrival},departure=${staySearch.departure},rooms=${staySearch.rooms})}" th:attr="aria-label='预订预览 ' + ${card.type.name}">安排入住 · 演示 <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+      </div>
+      <section class="empty-search" th:if="${#lists.isEmpty(roomCards) and #lists.isEmpty(searchErrors)}" aria-labelledby="empty-title">
+        <p class="section-label">A DIFFERENT STAY</p><h3 id="empty-title">暂未找到符合条件的居所</h3>
+        <p>所选日期内，没有足够数量的连续可用房间。请调整日期、房间数量或房型。</p>
+        <a class="outline-button" href="#stay-search">调整入住安排</a>
+        <a class="text-link" th:href="@{/rooms}">查看全部居所 <span aria-hidden="true">↗</span></a>
+      </section>
+      <p class="collection-count" th:if="${#lists.isEmpty(searchErrors)}" th:text="'展示 ' + ${#lists.size(roomCards)} + ' 类居所'" aria-live="polite"></p>
+    </section>
+    <dialog id="room-detail-dialog" class="room-dialog" aria-labelledby="room-dialog-title">
+      <button class="close-button room-dialog-close" type="button" data-close-dialog aria-label="关闭居所详情">×</button>
+      <img id="room-dialog-image" alt="居所展示照片">
+      <div class="room-dialog-copy">
+        <p class="section-label">THE RESIDENCE</p><h2 id="room-dialog-title">居所详情</h2>
+        <p id="room-dialog-description"></p><p id="room-dialog-price" class="room-rate"></p>
+        <p class="preview-note">每晚基础价不含会员折扣。示例房源暂不接受真实预订。</p>
+        <button class="outline-button" type="button" data-plan-stay>选择入住日期</button>
+      </div>
+    </dialog>
+  </main>
+  <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('确认入住安排')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('stay')}"></header>
+<nav th:replace="~{fragments/layout :: stayNav('confirm')}"></nav>
+<main id="main-content" tabindex="-1" class="stay-main">
+  <aside th:replace="~{fragments/layout :: stayPreviewNote}"></aside>
+  <div class="stay-page-heading"><p class="section-label">A STAY TO LOOK FORWARD TO</p><h1>确认您的入住安排</h1><p>先留好假期的时间，再完善入住资料。</p></div>
+  <ol class="stay-steps" aria-label="预订步骤"><li aria-current="step"><span>01</span>入住安排</li><li><span>02</span>预订详情</li><li><span>03</span>支付</li></ol>
+  <div class="stay-columns">
+    <form th:action="${previewBase}" th:object="${stayForm}" method="post" class="stay-form-panel">
+      <div class="admin-errors" th:if="${#fields.hasAnyErrors()}" role="alert"><h2>请检查入住信息</h2><ul><li th:each="error : ${formErrors}" th:text="${error}"></li></ul></div>
+      <section class="stay-form-section" aria-labelledby="arrangement-title"><div class="stay-section-title"><span>01</span><h2 id="arrangement-title">入住安排</h2></div>
+        <div class="admin-field"><label for="roomType">居所房型</label><select th:field="*{roomType}" required><option value="">请选择房型</option><option th:each="type : ${roomTypes}" th:value="${type.id}" th:text="${type.name}"></option></select></div>
+        <div class="stay-field-pair"><div class="admin-field"><label for="arrival">入住日期</label><input type="date" th:field="*{arrival}" th:min="${today}" required></div><div class="admin-field"><label for="departure">退房日期</label><input type="date" th:field="*{departure}" th:min="${today.plusDays(1)}" required></div></div>
+        <div class="admin-field"><label for="rooms">房间数量</label><input type="number" th:field="*{rooms}" min="1" step="1" inputmode="numeric" required></div>
+        <p class="stay-help">提交时会再次检查可用数量。本页面不会为您保留房间。</p>
+      </section>
+      <section class="stay-form-section" aria-labelledby="contact-title"><div class="stay-section-title"><span>02</span><h2 id="contact-title">入住资料</h2></div>
+        <div class="admin-field"><label for="guestName">入住人姓名</label><input type="text" th:field="*{guestName}" maxlength="80" required autocomplete="off"></div>
+        <div class="admin-field"><label for="guestEmail">联系邮箱</label><input type="email" th:field="*{guestEmail}" maxlength="254" required autocomplete="off"></div>
+        <p class="stay-help">可保留预填的演示住客与示例邮箱。资料仅用于当前会话的页面预览，不会发送邮件。</p>
+      </section>
+      <section class="stay-price-note"><h2>费用与会员权益</h2><dl class="stay-facts"><div><dt>住宿总价</dt><dd th:text="${quote != null} ? ${quote.totalLabel()} : '待预订服务报价'"></dd></div><div><dt>会员折扣</dt><dd th:text="${quote != null} ? ${quote.discountLabel} : '待会员 / 预订服务返回'"></dd></div></dl><p>最终金额与成交价格快照由预订服务确认，基础价不构成成交报价。</p></section>
+      <button class="solid-button stay-submit" type="submit">预览订单与支付页 <span aria-hidden="true">→</span></button>
+    </form>
+    <div class="stay-side"><th:block th:if="${quote != null}"><aside th:replace="~{fragments/layout :: staySummary(${quote.stay})}"></aside><p class="stay-help" th:text="'当前查询可用 ' + ${quote.availableRooms} + ' 间 · 尚未占用'"></p></th:block><aside class="stay-summary-placeholder" th:if="${quote == null}"><p class="section-label">YOUR RESIDENCE</p><h2>完善入住安排</h2><p>修正左侧日期、房型和数量后，可继续预览入住摘要。</p></aside></div>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

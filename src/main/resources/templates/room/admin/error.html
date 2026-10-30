@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('房间操作未完成')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+<nav th:replace="~{fragments/layout :: staffNav}"></nav>
+<main id="main-content" tabindex="-1" class="admin-main admin-editor"><p class="section-label">ROOM OPERATIONS</p><h1>操作未完成</h1><p class="admin-errors" role="alert" th:text="${managementError}"></p><a class="outline-button" th:href="@{/admin/rooms}">返回房间清单</a></main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

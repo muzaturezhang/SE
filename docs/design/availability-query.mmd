@@ -1,0 +1,31 @@
+sequenceDiagram
+ actor U as 浏览器
+ participant C as RoomPageController
+ participant S as RoomQueryService
+ participant R as RoomRepository
+ U->>C: GET /rooms 条件
+ Note over C: 绑定日期/整数 白名单字段
+ C->>S: listRoomTypes()
+ S->>R: readSnapshot()
+ R-->>S: 目录快照
+ S-->>C: List RoomType
+ alt 绑定失败或未知房型
+  C-->>U: 可读 HTTP 400
+ else 无日期和数量参数
+  C-->>U: HTTP 200 目录 无可用数
+ else 有查询意图且绑定成功
+  C->>S: search(RoomSearchQuery)
+  Note over S: 按 Clock 校验日期和数量
+  alt Service字段非法
+   S-->>C: InvalidRoomSearchException
+   C-->>U: 可读 HTTP 400 保留输入
+  else 合法
+   S->>R: readSnapshot() 一次
+   R-->>S: 一致不可变 RoomInventory
+   Note over S: 校验房型 排除停用/重叠的物理房间
+   Note over S: 按房型计数 过滤 availableRooms 小于请求数
+   S-->>C: RoomSearchResult 可能空 options
+   C-->>U: HTTP 200 结果或空状态
+  end
+ end
+ Note over U,R: 查询不占库存 不能替代真实创建事务

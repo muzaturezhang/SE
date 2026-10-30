@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('预览记录不可用')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('stay')}"></header>
+<nav th:replace="~{fragments/layout :: stayNav('list')}"></nav>
+<main id="main-content" tabindex="-1" class="stay-main"><aside th:replace="~{fragments/layout :: stayPreviewNote}"></aside><section class="stay-empty"><p class="section-label">YOUR STAY</p><h1>预览记录不可用</h1><p role="alert" th:text="${stayError}"></p><a class="outline-button" th:href="${previewBase}">返回我的预订</a></section></main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

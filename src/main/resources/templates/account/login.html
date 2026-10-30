@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('账户登录 · 演示')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('account')}"></header>
+<nav th:replace="~{fragments/layout :: accountNav('login')}"></nav>
+<main id="main-content" tabindex="-1" class="account-main">
+  <aside th:replace="~{fragments/layout :: accountPreviewNote}"></aside>
+  <p class="admin-success" role="status" th:if="${accountMessage}" th:text="${accountMessage}"></p>
+  <div class="account-auth-grid"><section class="account-introduction"><p class="section-label">A PLACE TO RETURN TO</p><h1>欢迎回来</h1><p>查看您的入住安排，为下一段假期留出时间。</p><img th:src="@{/images/coastal-retreat.jpg}" alt="露台与绿植环绕的度假居所" width="1400" height="996"><p class="account-photo-caption">Holiday Resort · 海岸度假居所</p></section>
+    <section class="account-auth-panel" aria-labelledby="login-title"><p class="section-label">YOUR ACCOUNT</p><h2 id="login-title">账户登录</h2><p class="account-form-lead">此处预览登录后的页面，真实认证服务尚未接入。</p>
+      <div th:replace="~{fragments/layout :: accountErrors}"></div>
+      <form th:action="@{/preview/account/login}" th:object="${loginForm}" method="post" class="account-form" autocomplete="off">
+        <input type="hidden" name="next" th:value="${returnTarget}">
+        <div class="admin-field"><label for="email">邮箱</label><input type="email" th:field="*{email}" maxlength="254" required autocomplete="off"></div>
+        <div class="admin-field"><label for="password">演示密码</label><input type="password" id="password" name="password" maxlength="256" required autocomplete="off" aria-describedby="password-help"><p id="password-help">请使用临时演示文本。只校验必填和输入长度，不验证真实账号密码。</p></div>
+        <p class="account-return" th:text="'完成演示后返回：' + ${returnLabel}"></p>
+        <button class="solid-button" type="submit">预览登录后页面 <span aria-hidden="true">→</span></button>
+      </form>
+      <p class="account-switch">还没有账户？<a th:href="@{/preview/account/register(next=${returnTarget})}">查看注册页面 ↗</a></p>
+      <nav class="account-examples" aria-label="登录状态示例"><a th:href="@{/preview/account/login(next=${returnTarget})}">正常表单</a><a th:href="@{/preview/account/login(next=${returnTarget},example='denied')}">查看登录失败提示示例</a></nav>
+    </section>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

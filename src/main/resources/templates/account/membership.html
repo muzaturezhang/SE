@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('会员与权益 · 演示')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('account')}"></header>
+<nav th:replace="~{fragments/layout :: accountNav('membership')}"></nav>
+<main id="main-content" tabindex="-1" class="account-main"><aside th:replace="~{fragments/layout :: accountPreviewNote}"></aside>
+  <div class="account-page-heading"><p class="section-label">MORE FROM YOUR HOLIDAY</p><h1>会员与权益</h1><p>为每一次归来，了解适合您的会员安排。</p></div>
+  <div class="account-membership-grid"><section class="account-member-state" aria-labelledby="member-state-title"><p class="section-label">MEMBERSHIP STATUS · UI EXAMPLE</p><h2 id="member-state-title" th:text="${membership.state.label()} + ' · 示例'"></h2><p class="stay-help">以下是固定展示状态，切换示例不会开通会员或改变真实资格。</p><dl class="stay-facts"><div><dt>住宿优惠</dt><dd th:text="${membership.discountLabel}"></dd></div><div th:if="${membership.startDate != null}"><dt>示例生效日</dt><dd th:text="${membership.startDate}"></dd></div><div th:if="${membership.endDate != null}"><dt>示例到期日</dt><dd th:text="${membership.endDate}"></dd></div><div><dt>会员费</dt><dd th:text="${membership.feeLabel()}"></dd></div></dl>
+    <p class="stay-help" th:text="${membership.validityLabel}"></p>
+    <a th:if="${membership.state.name() == 'NONE'}" class="solid-button" th:href="@{/preview/account/membership/join(intent='join')}">查看开通页面 →</a>
+    <a th:if="${membership.state.name() == 'EXPIRED'}" class="solid-button" th:href="@{/preview/account/membership/join(intent='renew')}">查看续费页面 →</a>
+    <a th:if="${membership.state.name() == 'ACTIVE'}" class="outline-button" href="#member-benefits">查看权益说明 ↓</a>
+    <p th:if="${membership.state.name() == 'PENDING'}" class="account-pending">开通结果待会员 / 支付服务核对，此状态不提供重复付款操作。</p>
+    <nav class="account-examples" aria-label="会员状态示例"><a th:href="@{/preview/account/membership(example='none')}">未开通</a><a th:href="@{/preview/account/membership(example='active')}">有效</a><a th:href="@{/preview/account/membership(example='expired')}">已过期</a><a th:href="@{/preview/account/membership(example='pending')}">待确认</a></nav>
+  </section><img class="account-membership-photo" th:src="@{/images/tropical-pool.jpg}" alt="棕榈树与泳池相邻的度假空间" width="1400" height="996"></div>
+  <section id="member-benefits" class="account-benefits" aria-labelledby="benefits-title"><p class="section-label">MEMBER EXPERIENCE</p><h2 id="benefits-title">权益与费用说明</h2><div class="account-benefit-grid"><article><span>01</span><h3>住宿优惠</h3><p>适用条件与优惠幅度由会员服务提供，最终住宿报价由预订服务确认。</p></article><article><span>02</span><h3>状态与有效期</h3><p>在个人中心查看服务返回的会员资格、有效日期和需要确认的状态。</p></article><article><span>03</span><h3>独立会员费</h3><p>会员费单独展示，不与住宿房费混算，也不套用住宿会员折扣。</p></article></div></section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('调整房型房价')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+<nav th:replace="~{fragments/layout :: staffNav}"></nav>
+<main id="main-content" tabindex="-1" class="admin-main admin-editor">
+  <a class="text-link admin-back" th:href="@{/admin/rooms}">← 返回房间清单</a>
+  <p class="section-label">NIGHTLY BASE RATE</p><h1 th:text="${roomType.name} + ' · 基础价'"></h1>
+  <p class="admin-lead">统一更新该房型每间每晚的基础价，客房页将立即显示新价格。</p>
+  <form th:action="@{/admin/room-types/{id}/rate(id=${roomType.id})}" th:object="${rateForm}" method="post" class="admin-form">
+    <div th:if="${#fields.hasAnyErrors()}" class="admin-errors" role="alert"><h2>请检查房价</h2><p th:each="error : ${formErrors}" th:text="${error}"></p></div>
+    <div class="admin-field"><label for="nightlyRate">每晚基础价（CNY）</label><input type="number" th:field="*{nightlyRate}" min="0.01" step="0.01" required inputmode="decimal" aria-describedby="rate-help"><p id="rate-help">大于零，最多两位小数；不在这里计算入住晚数或会员折扣。</p></div>
+    <div class="admin-form-actions"><button class="solid-button" type="submit">保存基础价</button><a class="text-link" th:href="@{/admin/rooms}">取消</a></div>
+  </form>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

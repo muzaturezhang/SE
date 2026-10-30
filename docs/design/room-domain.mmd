@@ -1,0 +1,39 @@
+classDiagram
+class RoomInventory {
+  <<record>>
+  -List~RoomType~ roomTypes
+  -List~Room~ rooms
+  -List~RoomBlock~ blocks
+}
+class RoomType {
+  <<record>>
+  -String id
+  -String name
+  -long nightlyRateMinor
+}
+class Room {
+  <<record>>
+  -String id
+  -String roomTypeId
+  -boolean enabled
+}
+class RoomBlock {
+  <<record>>
+  -String roomId
+  -StayPeriod period
+}
+class StayPeriod {
+  <<record>>
+  -LocalDate arrival
+  -LocalDate departure
+  +nights() long
+  +overlaps(StayPeriod other) boolean
+}
+RoomInventory o-- "0..*" RoomType : roomTypes
+RoomInventory o-- "0..*" Room : rooms
+RoomInventory o-- "0..*" RoomBlock : blocks
+Room "0..*" --> "1" RoomType : roomTypeId reference
+RoomBlock "0..*" --> "1" Room : roomId reference
+RoomBlock *-- "1" StayPeriod : period
+note for RoomType "Key fields only; remaining fields are in room-model.md"
+note for Room "ID association; not an object field or frozen database schema"

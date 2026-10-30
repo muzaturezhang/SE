@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="770" viewBox="0 0 1200 770" role="img">
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10" fill="none" stroke="#26313a" stroke-width="1.3"/></marker><marker id="triangle" markerWidth="13" markerHeight="13" refX="12" refY="6.5" orient="auto"><path d="M0,0 L12,6.5 L0,13 Z" fill="white" stroke="#26313a" stroke-width="1.3"/></marker></defs>
+<rect width="1200" height="770" fill="white"/>
+<rect x="25" y="25" width="370" height="105" rx="2" fill="#f5f7f8" stroke="#88949e" stroke-width="1.5"/>
+<text x="210.0" y="57" text-anchor="middle" font-family="Arial, PingFang SC, sans-serif" font-size="24" fill="#26313a">RoomPageController</text>
+<polyline points="25,71 395,71" fill="none" stroke="#26313a" stroke-width="2"/>
+<text x="41" y="99" text-anchor="start" font-family="Arial, PingFang SC, sans-serif" font-size="21" fill="#26313a">GET /rooms</text>
+<rect x="805" y="25" width="370" height="105" rx="2" fill="#f5f7f8" stroke="#88949e" stroke-width="1.5"/>
+<text x="990.0" y="57" text-anchor="middle" font-family="Arial, PingFang SC, sans-serif" font-size="24" fill="#26313a">RoomAdminController</text>
+<polyline points="805,71 1175,71" fill="none" stroke="#26313a" stroke-width="2"/>
+<text x="821" y="99" text-anchor="start" font-family="Arial, PingFang SC, sans-serif" font-size="21" fill="#26313a">GET / POST room management</text>
+<rect x="25" y="235" width="370" height="130" rx="2" fill="#f5f7f8" stroke="#88949e" stroke-width="1.5"/>
+<text x="210.0" y="260" text-anchor="middle" font-family="Arial, PingFang SC, sans-serif" font-size="18" fill="#596671">interface</text>
+<text x="210.0" y="287" text-anchor="middle" font-family="Arial, PingFang SC, sans-serif" font-size="24" fill="#26313a">RoomQueryService</text>
+<polyline points="25,301 395,301" fill="none" stroke="#26313a" stroke-width="2"/>
+<text x="41" y="329" text-anchor="start" font-family="Arial, PingFang SC, sans-serif" font-size="21" fill="#26313a">+listRoomTypes()</text>
+<text x="41" y="357" text-anchor="start" font-family="Arial, PingFang SC, sans-serif" font-size="21" fill="#26313a">+search(query)</text>
+<rect x="805" y="235" width="370" height="130" rx="2" fill="#f5f7f8" stroke="#88949e" stroke-width="1.5"/>
+<text x="990.0" y="267" text-anchor="middle" font-family="Arial, PingFang SC, sans-serif" font-size="24" fill="#26313a">RoomManagementService</text>
+<polyline points="805,281 1175,281" fill="none" stroke="#26313a" stroke-width="2"/>
+<text x="821" y="309" text-anchor="start" font-family="Arial, PingFang SC, sans-serif" font-size="21" fill="#26313a">+list / get / create / update</text>
+<text x="821" y="337" text-anchor="start" font-family="Arial, PingFang SC, sans-serif" font-size="21" fill="#26313a">+disable / updateRate</text>
+<rect x="25" y="450" width="370" height="105" rx="2" fill="#f5f7f8" stroke="#88949e" stroke-width="1.5"/>
+<text x="210.0" y="482" text-anchor="middle" font-family="Arial, PingFang SC, sans-serif" font-size="24" fill="#26313a">DefaultRoomQueryService</text>
+<polyline points="25,496 395,496" fill="none" stroke="#26313a" stroke-width="2"/>
+<text x="41" y="524" text-anchor="start" font-family="Arial, PingFang SC, sans-serif" font-size="21" fill="#26313a">-repository / -clock</text>
+<rect x="805" y="450" width="370" height="105" rx="2" fill="#f5f7f8" stroke="#88949e" stroke-width="1.5"/>
+<text x="990.0" y="475" text-anchor="middle" font-family="Arial, PingFang SC, sans-serif" font-size="18" fill="#596671">interface</text>
+<text x="990.0" y="502" text-anchor="middle" font-family="Arial, PingFang SC, sans-serif" font-size="24" fill="#26313a">RoomInventoryEditor</text>
+<polyline points="805,516 1175,516" fill="none" stroke="#26313a" stroke-width="2"/>
+<text x="821" y="544" text-anchor="start" font-family="Arial, PingFang SC, sans-serif" font-size="21" fill="#26313a">+updateSnapshot(change)</text>
+<rect x="415" y="650" width="370" height="105" rx="2" fill="#f5f7f8" stroke="#88949e" stroke-width="1.5"/>
+<text x="600.0" y="675" text-anchor="middle" font-family="Arial, PingFang SC, sans-serif" font-size="18" fill="#596671">interface</text>
+<text x="600.0" y="702" text-anchor="middle" font-family="Arial, PingFang SC, sans-serif" font-size="24" fill="#26313a">RoomRepository</text>
+<polyline points="415,716 785,716" fill="none" stroke="#26313a" stroke-width="2"/>
+<text x="431" y="744" text-anchor="start" font-family="Arial, PingFang SC, sans-serif" font-size="21" fill="#26313a">+readSnapshot()</text>
+<rect x="805" y="650" width="370" height="105" rx="2" fill="#f5f7f8" stroke="#88949e" stroke-width="1.5"/>
+<text x="990.0" y="682" text-anchor="middle" font-family="Arial, PingFang SC, sans-serif" font-size="24" fill="#26313a">InMemoryRoomRepository</text>
+<polyline points="805,696 1175,696" fill="none" stroke="#26313a" stroke-width="2"/>
+<text x="821" y="724" text-anchor="start" font-family="Arial, PingFang SC, sans-serif" font-size="21" fill="#26313a">volatile + synchronized</text>
+<polyline points="210,130 210,235" fill="none" stroke="#26313a" stroke-width="2" marker-end="url(#arrow)"/>
+<polyline points="990,130 990,235" fill="none" stroke="#26313a" stroke-width="2" marker-end="url(#arrow)"/>
+<polyline points="850,130 850,180 350,180 350,235" fill="none" stroke="#26313a" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="550" y="165" text-anchor="middle" font-family="Arial, PingFang SC, sans-serif" font-size="19" fill="#26313a">catalog reads</text>
+<polyline points="210,450 210,365" fill="none" stroke="#26313a" stroke-width="2" stroke-dasharray="8 6" marker-end="url(#triangle)"/>
+<polyline points="990,365 990,450" fill="none" stroke="#26313a" stroke-width="2" marker-end="url(#arrow)"/>
+<polyline points="210,555 210,700 415,700" fill="none" stroke="#26313a" stroke-width="2" marker-end="url(#arrow)"/>
+<polyline points="805,505 600,505 600,650" fill="none" stroke="#26313a" stroke-width="2" marker-end="url(#triangle)"/>
+<text x="620" y="540" text-anchor="start" font-family="Arial, PingFang SC, sans-serif" font-size="19" fill="#26313a">extends</text>
+<polyline points="990,650 990,555" fill="none" stroke="#26313a" stroke-width="2" stroke-dasharray="8 6" marker-end="url(#triangle)"/>
+<text x="35" y="610" text-anchor="start" font-family="Arial, PingFang SC, sans-serif" font-size="19" fill="#596671">Clock injected</text>
+<text x="35" y="639" text-anchor="start" font-family="Arial, PingFang SC, sans-serif" font-size="19" fill="#596671">into both services.</text>
+</svg>

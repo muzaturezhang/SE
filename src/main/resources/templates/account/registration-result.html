@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('注册表单预览结果')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('account')}"></header>
+<nav th:replace="~{fragments/layout :: accountNav('register')}"></nav>
+<main id="main-content" tabindex="-1" class="account-main"><aside th:replace="~{fragments/layout :: accountPreviewNote}"></aside>
+  <section class="account-result"><p class="section-label">REGISTRATION FORM PREVIEW</p><h1>注册表单校验通过</h1><p>这是一份当前会话的页面演示结果。没有创建真实账号、保存密码或发送验证邮件。</p><dl class="stay-facts"><div><dt>姓名</dt><dd th:text="${registration.displayName}"></dd></div><div><dt>邮箱</dt><dd th:text="${registration.email}"></dd></div></dl><a class="solid-button" th:href="@{/preview/account/login(next=${returnTarget})}">继续预览登录页面 →</a><p class="stay-help" th:text="'登录演示后的返回位置：' + ${returnLabel}"></p></section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

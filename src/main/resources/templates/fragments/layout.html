@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(pageTitle)">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3eee7">
+  <meta name="description" content="Holiday Resort 海岸度假酒店，探索客房、套房与泳池别墅。">
+  <title th:text="${pageTitle} + ' | Holiday Resort'">Holiday Resort</title>
+  <link rel="stylesheet" th:href="@{/vendor/bootstrap/bootstrap.min.css}">
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+  <header th:fragment="header(activePage)" class="site-header">
+    <a class="skip-link" href="#main-content">跳转到主要内容</a>
+    <nav class="main-nav" aria-label="主导航">
+      <button class="menu-toggle plain-button" type="button" data-open-menu aria-label="探索" aria-controls="navigation-dialog" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 16" width="24" height="16" aria-hidden="true"><path d="M0 3h24M0 12h24"/></svg><span>探索</span>
+      </button>
+      <a class="wordmark" th:href="@{/}" aria-label="Holiday Resort 首页">Holiday<span>R E S O R T</span></a>
+      <div class="nav-actions"><a class="nav-room-link" th:href="@{/rooms}" th:attr="aria-current=${activePage == 'rooms' ? 'page' : null}">客房与别墅</a><a class="outline-button reserve-link" th:href="@{/rooms#stay-search}">预订住宿</a></div>
+    </nav>
+    <dialog id="navigation-dialog" class="navigation-dialog" aria-labelledby="navigation-title">
+      <div class="dialog-top"><p class="section-label" id="navigation-title">EXPLORE HOLIDAY</p><button class="close-button" type="button" data-close-dialog aria-label="关闭导航">×</button></div>
+      <nav class="expanded-navigation" aria-label="探索度假村">
+        <a th:href="@{/#resort}"><span>01</span>度假村</a>
+        <a th:href="@{/rooms}"><span>02</span>客房与别墅</a>
+        <a th:href="@{/rooms#stay-search}"><span>03</span>安排入住</a>
+        <a th:href="@{/#before-arrival}"><span>04</span>入住须知</a>
+        <a th:if="${accountUiPreview == true}" th:href="@{/preview/account}"><span>05</span>我的账户 · 演示</a>
+      </nav>
+      <p class="dialog-footnote">Holiday Resort · 海岸度假居所</p>
+    </dialog>
+  </header>
+  <section th:fragment="staySearch" id="stay-search" class="stay-search" aria-label="选择入住日期">
+    <div class="stay-search-heading"><p class="section-label">YOUR STAY</p><span>安排您的假期</span></div>
+    <form th:action="@{/rooms#collection}" th:object="${staySearch}" id="stay-search-form" method="get" class="stay-form" data-stay-form>
+      <div class="stay-field"><label for="arrival">入住日期</label><input type="date" th:field="*{arrival}" th:min="${today}" required></div>
+      <div class="stay-field"><label for="departure">退房日期</label><input type="date" th:field="*{departure}" th:min="${minimumDeparture}" required></div>
+      <div class="stay-field rooms-count-field"><label for="rooms">房间数量</label><input type="number" th:field="*{rooms}" min="1" step="1" required inputmode="numeric"></div>
+      <button class="solid-button" type="submit">浏览客房 <span aria-hidden="true">→</span></button>
+    </form>
+    <p class="form-error" data-form-error role="alert" hidden></p>
+  </section>
+  <footer th:fragment="footer" class="site-footer">
+    <div class="footer-main"><a class="wordmark footer-wordmark" th:href="@{/}">Holiday<span>R E S O R T</span></a><p>海岸度假居所</p><a class="text-link" th:href="@{/rooms#stay-search}">安排您的入住 <span aria-hidden="true">↗</span></a></div>
+    <div class="footer-bottom"><p>© 2026 Holiday Resort</p><p>示例房源 · 暂不接受真实预订</p><a th:href="@{/#main-content}">回到首页 ↑</a></div>
+    <div class="staff-entry" th:if="${staffSignedIn == true or localStaffPreview == true}"><a th:href="${staffSignedIn} ? @{/admin/rooms} : @{/staff-preview/login}" th:text="${staffSignedIn} ? '房间管理 ↗' : '本地管理预览 ↗'">房间管理 ↗</a></div>
+    <div class="staff-entry" th:if="${bookingUiPreview == true}"><a th:href="@{/preview/stays/new}">预订流程预览 ↗</a></div>
+    <div class="staff-entry" th:if="${accountUiPreview == true}"><a th:href="@{/preview/account/login}">账户与会员预览 ↗</a></div>
+    <script th:src="@{/js/app.js}" defer></script>
+  </footer>
+  <nav th:fragment="staffNav" class="staff-nav" aria-label="管理导航">
+    <div class="staff-sections"><a th:href="@{/admin/rooms}" th:attr="aria-current=${staffSection != 'stays' ? 'page' : null}">房间管理</a><a th:if="${staffBookingUiPreview}" th:href="@{/admin/stays}" th:attr="aria-current=${staffSection == 'stays' ? 'page' : null}">预订管理</a></div>
+    <div><a th:href="@{/rooms}">查看客房页 ↗</a><form th:if="${localStaffPreview}" th:action="@{/logout}" method="post"><button class="plain-button" type="submit">退出管理</button></form></div>
+  </nav>
+  <nav th:fragment="stayNav(active)" class="stay-nav" aria-label="入住安排导航">
+    <a th:href="@{/rooms#stay-search}">← 客房与日期</a>
+    <div><a th:href="${previewBase} + '/new'" th:attr="aria-current=${active == 'confirm' ? 'page' : null}">安排入住</a><a th:href="${previewBase}" th:attr="aria-current=${active == 'list' ? 'page' : null}">我的预订</a></div>
+  </nav>
+  <aside th:fragment="stayPreviewNote" class="stay-preview-note" aria-label="演示环境说明"><strong>本地 UI 演示</strong><span>仅验证页面与输入，不创建真实预订、不占库存、不扣款。请使用示例资料。</span></aside>
+  <aside th:fragment="staySummary(stay)" class="stay-summary" aria-label="入住摘要">
+    <img th:src="${stay.imagePath}" th:alt="${stay.imageAlt}" width="1400" height="996">
+    <div class="stay-summary-copy"><p class="section-label">YOUR RESIDENCE</p><h2 th:text="${stay.roomTypeName}"></h2>
+      <dl class="stay-facts"><div><dt>入住</dt><dd th:text="${stay.arrival}"></dd></div><div><dt>退房</dt><dd th:text="${stay.departure}"></dd></div><div><dt>住宿安排</dt><dd th:text="${stay.nights()} + ' 晚 · ' + ${stay.rooms} + ' 间'"></dd></div><div><dt>每间每晚基础价</dt><dd th:text="'CNY ' + ${stay.rateLabel()}"></dd></div></dl>
+    </div>
+  </aside>
+  <nav th:fragment="accountNav(active)" class="account-nav" aria-label="账户导航">
+    <a th:href="@{/}">← 返回度假村</a><div><a th:href="@{/preview/account}" th:attr="aria-current=${active == 'profile' ? 'page' : null}">个人中心</a><a th:href="@{/preview/account/membership}" th:attr="aria-current=${active == 'membership' ? 'page' : null}">会员</a><a th:if="${bookingUiPreview == true}" th:href="@{/preview/stays}">我的预订</a></div>
+  </nav>
+  <aside th:fragment="accountPreviewNote" class="stay-preview-note" aria-label="账户演示说明"><strong>本地账户 UI 演示</strong><span>仅预览页面，不创建真实账号或会员，不保存密码，也不改变系统权限。请使用示例资料。</span></aside>
+  <div th:fragment="accountErrors" class="admin-errors" th:if="${formErrors != null and not #lists.isEmpty(formErrors)}" role="alert"><h2>请检查账户信息</h2><ul><li th:each="error : ${formErrors}" th:text="${error}"></li></ul></div>
+</body>
+</html>

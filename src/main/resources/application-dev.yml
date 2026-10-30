@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:resort-dev;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  h2:
+    console:
+      enabled: false
+  thymeleaf:
+    cache: false

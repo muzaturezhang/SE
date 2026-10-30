@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('海岸度假居所')}"></head>
+<body>
+  <header th:replace="~{fragments/layout :: header('home')}"></header>
+  <main id="main-content" tabindex="-1">
+    <section class="hero" aria-label="度假村景致">
+      <img class="hero-image" th:src="@{/images/tropical-pool.jpg}" alt="棕榈树环绕的泳池与自然石材露台" width="2400" height="1600" fetchpriority="high">
+      <div class="hero-caption"><span>HOLIDAY RESORT</span><span>海岸 · 泳池 · 私享居所</span></div>
+      <a class="hero-discover" href="#resort" aria-label="向下探索度假村"><span>探索度假村</span><span aria-hidden="true">↓</span></a>
+    </section>
+    <div th:replace="~{fragments/layout :: staySearch}"></div>
+    <section id="resort" class="resort-introduction section-space">
+      <p class="section-label">WELCOME TO HOLIDAY</p>
+      <h1>海岸度假居所</h1>
+      <p class="intro-copy">从临海的露台到庭院深处的客房，<br class="desktop-break">在自然与日常之间，留一段属于自己的时间。</p>
+      <a class="text-link" th:href="@{/rooms}">探索客房与别墅 <span aria-hidden="true">↗</span></a>
+    </section>
+    <section id="stays" class="editorial-section section-space" aria-labelledby="stays-title">
+      <a class="editorial-image-link" th:href="@{/rooms}" aria-label="探索客房与套房"><img th:src="@{/images/suite-interior.jpg}" alt="以暖色木饰和柔软织物布置的客房" width="1400" height="996" loading="lazy"></a>
+      <div class="editorial-copy"><p class="section-label">ROOMS &amp; SUITES</p><h2 id="stays-title">一间客房，<br>一种度假方式。</h2><p>庭院客房、露台套房与泳池别墅。选择合适的空间，安排下一段入住。</p><a class="text-link" th:href="@{/rooms#collection}">浏览居所 <span aria-hidden="true">↗</span></a></div>
+    </section>
+    <section class="landscape-section section-space" aria-labelledby="landscape-title">
+      <div class="landscape-heading"><div><p class="section-label">AT YOUR OWN PACE</p><h2 id="landscape-title">泳池与庭院</h2></div><p>从午后的水边，到日落时分的露台。</p></div>
+      <img th:src="@{/images/coastal-retreat.jpg}" alt="现代度假别墅前的无边泳池与热带庭院" width="2200" height="3300" loading="lazy">
+    </section>
+    <section id="before-arrival" class="arrival-section section-space" aria-labelledby="arrival-title">
+      <div><p class="section-label">BEFORE YOUR STAY</p><h2 id="arrival-title">入住之前</h2></div>
+      <div class="arrival-questions">
+        <details><summary>如何选择客房？<span aria-hidden="true">+</span></summary><p>进入客房与别墅页面，选择入住日期、退房日期和房间数量，浏览不同居所的展示信息。</p></details>
+        <details><summary>入住晚数如何计算？<span aria-hidden="true">+</span></summary><p>按入住日期至退房日期之间的晚数计算。例如 11 月 1 日入住、11 月 3 日退房，共 2 晚。</p></details>
+        <details><summary>现在可以完成预订吗？<span aria-hidden="true">+</span></summary><p>目前可查询示例房源在所选日期的可用数量和每晚基础价。在线预订尚未开放，查询不会占用房间或收取费用。</p></details>
+      </div>
+    </section>
+  </main>
+  <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

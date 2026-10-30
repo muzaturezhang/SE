@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('支付 · 演示')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('stay')}"></header>
+<nav th:replace="~{fragments/layout :: stayNav('list')}"></nav>
+<main id="main-content" tabindex="-1" class="stay-main">
+  <aside th:replace="~{fragments/layout :: stayPreviewNote}"></aside>
+  <a class="text-link stay-back" th:href="${previewBase} + '/' + ${reservation.reference}">← 返回预订详情</a>
+  <div class="stay-page-heading"><p class="section-label">YOUR STAY, ALMOST ARRANGED</p><h1>支付与确认</h1><p th:text="${reservation.reference}"></p></div>
+  <div class="stay-columns">
+    <section class="stay-payment-panel" aria-labelledby="payment-state-title">
+      <p class="section-label">PAYMENT STATUS · UI EXAMPLE</p><h2 id="payment-state-title" th:text="${reservation.state.label()}"></h2><p class="payment-state-copy" th:text="${reservation.state.description()}"></p>
+      <dl class="stay-facts"><div><dt>应付金额</dt><dd class="stay-total" th:text="${reservation.totalLabel()}"></dd></div><div><dt>会员优惠</dt><dd th:text="${reservation.discountLabel}"></dd></div><div th:if="${reservation.paymentDeadline != null}"><dt>示例截止时间</dt><dd th:text="${#temporals.format(reservation.paymentDeadline, 'yyyy-MM-dd HH:mm')} + '（上海）'"></dd></div></dl>
+      <div class="payment-integration-note" id="payment-help"><h3>支付服务待接入</h3><p>这里将接收支付服务返回的操作入口和核对结果。当前没有支付账号输入框，也不会向支付平台提交请求。</p></div>
+      <button th:if="${reservation.state.name() == 'DRAFT' or reservation.state.name() == 'WAITING' or reservation.state.name() == 'FAILED'}" class="solid-button" type="button" disabled aria-describedby="payment-help">支付服务待接入</button>
+      <p class="stay-help" th:if="${reservation.state.name() == 'REVIEW'}">待核对时不提供重复付款操作；库存释放也须等待服务确认。</p>
+      <a class="outline-button" th:if="${reservation.state.name() == 'EXPIRED'}" th:href="@{/rooms#stay-search}">重新选择入住日期</a>
+      <a class="outline-button" th:if="${reservation.state.name() == 'PAID'}" th:href="${previewBase} + '/' + ${reservation.reference}">查看预订详情</a>
+    </section><aside th:replace="~{fragments/layout :: staySummary(${reservation.stay})}"></aside>
+  </div>
+  <section class="payment-examples" aria-labelledby="examples-title"><h2 id="examples-title">查看其他支付状态示例</h2><p>以下链接只切换固定示例页面，不会改变订单或支付状态。</p><nav aria-label="支付状态示例"><a th:href="${previewBase} + '/DEMO-WAITING/payment'">待支付</a><a th:href="${previewBase} + '/DEMO-PAID/payment'">支付成功</a><a th:href="${previewBase} + '/DEMO-FAILED/payment'">支付失败</a><a th:href="${previewBase} + '/DEMO-REVIEW/payment'">待核对</a><a th:href="${previewBase} + '/DEMO-EXPIRED/payment'">已过期</a></nav></section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('本地管理预览')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+<main id="main-content" tabindex="-1" class="admin-main admin-editor preview-login"><p class="section-label">LOCAL STAFF PREVIEW</p><h1>本地管理预览</h1><p class="admin-lead">独立验证房间管理功能。此入口仅用于本机开发，正式身份由团队登录模块接入。</p>
+  <p th:if="${param.error != null}" class="admin-errors" role="alert">用户名或密码不正确，请重新输入。</p>
+  <form th:action="@{/staff-preview/login}" method="post" class="admin-form"><div class="admin-field"><label for="username">用户名</label><input type="text" id="username" name="username" autocomplete="username" required></div><div class="admin-field"><label for="password">密码</label><input type="password" id="password" name="password" autocomplete="current-password" required></div><button class="solid-button" type="submit">进入房间管理 →</button></form>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

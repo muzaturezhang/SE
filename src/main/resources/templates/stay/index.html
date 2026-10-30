@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('我的预订 · 演示')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('stay')}"></header>
+<nav th:replace="~{fragments/layout :: stayNav('list')}"></nav>
+<main id="main-content" tabindex="-1" class="stay-main">
+  <aside th:replace="~{fragments/layout :: stayPreviewNote}"></aside>
+  <div class="stay-page-heading stay-heading-row"><div><p class="section-label">YOUR UPCOMING STAYS</p><h1>我的预订</h1><p>当前会话草稿与固定示例记录。</p></div><a class="outline-button" th:href="${previewBase} + '/new'">安排新的入住 →</a></div>
+  <nav class="stay-list-examples" aria-label="列表状态示例"><a th:href="${previewBase}">查看示例记录</a><a th:href="${previewBase} + '?example=empty'">查看空状态示例</a></nav>
+  <section class="stay-empty" th:if="${reservations.isEmpty()}"><h2>还没有预订记录</h2><p>从客房页选择日期，开始安排您的假期。</p><a class="text-link" th:href="@{/rooms#stay-search}">探索客房 ↗</a></section>
+  <div class="reservation-list"><article class="reservation-entry" th:each="item : ${reservations}">
+    <img th:src="${item.stay.imagePath}" th:alt="${item.stay.imageAlt}" width="1400" height="996" loading="lazy">
+    <div class="reservation-copy"><p class="section-label" th:text="${item.reference}"></p><h2 th:text="${item.stay.roomTypeName}"></h2><p class="reservation-dates" th:text="${item.stay.arrival} + ' — ' + ${item.stay.departure}"></p><p class="stay-help" th:text="${item.stay.nights()} + ' 晚 · ' + ${item.stay.rooms} + ' 间'"></p><a class="text-link" th:href="${previewBase} + '/' + ${item.reference}" th:attr="aria-label='查看预订 ' + ${item.reference}">查看详情 ↗</a></div>
+    <div class="reservation-status"><span class="stay-state" th:classappend="${'state-' + #strings.toLowerCase(item.state.name())}" th:text="${item.state.label()} + ' · 示例'"></span><p th:text="${item.totalLabel()}"></p><a th:if="${item.state.name() != 'PAID' and item.state.name() != 'EXPIRED'}" class="text-link" th:href="${previewBase} + '/' + ${item.reference} + '/payment'" th:attr="aria-label='支付预览 ' + ${item.reference}">查看支付页 →</a></div>
+  </article></div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

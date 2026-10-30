@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('房间管理')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+<nav th:replace="~{fragments/layout :: staffNav}"></nav>
+<main id="main-content" tabindex="-1" class="admin-main">
+  <div class="admin-heading"><div><p class="section-label">ROOM INVENTORY</p><h1>房间与房型</h1><p>维护每一间客房，让可售库存保持准确。</p></div><a class="solid-button" th:href="@{/admin/rooms/new}">新增房间 <span aria-hidden="true">＋</span></a></div>
+  <p class="admin-notice" th:if="${localStaffPreview}">本地开发预览 · 当前使用内存样例数据，重启后恢复初始房源。</p>
+  <p class="admin-success" role="status" th:if="${successMessage}" th:text="${successMessage}"></p>
+  <form method="get" th:action="@{/admin/rooms}" class="admin-filters">
+    <div class="admin-field"><label for="type">房型</label><select id="type" name="type"><option value="">全部房型</option><option th:each="type : ${roomTypes}" th:value="${type.id}" th:text="${type.name}" th:selected="${selectedType == type.id}"></option></select></div>
+    <div class="admin-field"><label for="state">房间状态</label><select id="state" name="state"><option value="all" th:selected="${selectedState == 'all'}">全部状态</option><option value="enabled" th:selected="${selectedState == 'enabled'}">启用</option><option value="disabled" th:selected="${selectedState == 'disabled'}">停用</option></select></div>
+    <button class="outline-button" type="submit">筛选房间</button><a class="text-link" th:href="@{/admin/rooms}">重置</a>
+  </form>
+  <div class="admin-section-heading"><h2>房间清单</h2><p th:text="${managedRooms.size()} + ' 间房间'">8 间房间</p></div>
+  <div class="admin-table-wrap" role="region" aria-label="房间清单表格" tabindex="0">
+    <table class="admin-table"><thead><tr><th scope="col">房号</th><th scope="col">房型</th><th scope="col">状态</th><th scope="col">当前 / 未来占用</th><th scope="col">操作</th></tr></thead>
+      <tbody><tr th:each="item : ${managedRooms}"><th scope="row" th:text="${item.room.id}">C101</th><td th:text="${item.type.name}">庭院客房</td><td><span class="room-state" th:classappend="${!item.room.enabled} ? ' is-disabled'" th:text="${item.room.enabled} ? '启用' : '停用'">启用</span></td><td th:text="${item.activeOrFutureBlock} ? '有占用 · 限制变更' : '无占用'">无占用</td><td><div class="admin-row-actions"><a th:href="@{/admin/rooms/{id}/edit(id=${item.room.id})}" th:attr="aria-label='编辑房间 ' + ${item.room.id}">编辑</a><a th:if="${item.room.enabled and !item.activeOrFutureBlock}" th:href="@{/admin/rooms/{id}/edit(id=${item.room.id})} + '#disable-room'" th:attr="aria-label='停用房间 ' + ${item.room.id}">停用…</a></div></td></tr>
+      <tr th:if="${managedRooms.isEmpty()}"><td colspan="5" class="admin-empty">没有符合筛选条件的房间。请调整房型或状态。</td></tr></tbody>
+    </table>
+  </div>
+  <p class="admin-help">停用会保留房间及历史记录。有当前或未来占用时，不能停用或更换房型。</p>
+  <section class="admin-rates" aria-labelledby="rates-title"><div class="admin-section-heading"><h2 id="rates-title">房型基础价</h2><p>CNY / 间 / 晚</p></div>
+    <div class="admin-rate-grid"><article th:each="card : ${rateCards}" th:with="type=${card.type}" class="admin-rate-item"><p class="section-label" th:text="${type.englishName}"></p><h3 th:text="${type.name}"></h3><p class="admin-rate-amount" th:text="'CNY ' + ${card.rateLabel}"></p><a class="text-link" th:href="@{/admin/room-types/{id}/rate(id=${type.id})}" th:attr="aria-label='调整' + ${type.name} + '房价'">调整房价 ↗</a></article></div>
+    <p class="admin-help">同房型共用每晚基础价；订单总价、会员折扣与成交价格快照由预订模块处理。</p>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

@@ -1,0 +1,22 @@
+flowchart TD
+ H["首页 /"] --> R["客房 /rooms 与查询结果"]
+ R --> RD["房型详情 dialog"]
+ R -->|"booking-ui 选房条件"| F["入住确认 /preview/stays/new"]
+ F -->|"POST /preview/stays CSRF"| D["草稿详情 /preview/stays/UI-DRAFT"]
+ D -->|"调整入住安排"| F
+ L["我的预订 /preview/stays"] --> D
+ L --> E["固定记录详情 /preview/stays/reference"]
+ D --> P["支付展示 /reference/payment 按钮禁用"]
+ E --> P
+ H -->|"account-ui 探索菜单"| A["个人中心 /preview/account"]
+ A -->|"无展示资料 302"| LOGIN["登录预览 /preview/account/login"]
+ LOGIN --> REG["注册 /preview/account/register"]
+ REG -->|"POST CSRF"| RESULT["本会话注册展示结果"]
+ RESULT --> LOGIN
+ LOGIN -->|"POST CSRF 白名单 next"| A
+ A --> M["会员 /preview/account/membership"]
+ A -->|"booking-ui"| L
+ M --> J["开通或续费 /membership/join"]
+ J -->|"无展示资料 经登录保留 next"| LOGIN
+ J --> DISABLED["付款禁用"]
+ A -->|"POST 只清展示资料"| LOGIN

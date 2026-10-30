@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: holiday-resort-booking
+  profiles:
+    default: dev
+  thymeleaf:
+    encoding: UTF-8
+  jackson:
+    time-zone: Asia/Shanghai
+  sql:
+    init:
+      mode: never
+
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${SERVER_PORT:8080}
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+  error:
+    include-message: never
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+app:
+  timezone: Asia/Shanghai
+  currency: CNY
+  booking-hold-minutes: ${BOOKING_HOLD_MINUTES:15}

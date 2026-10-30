@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('工作人员预订详情 · 本地演示')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+<nav th:replace="~{fragments/layout :: staffNav}"></nav>
+<main id="main-content" tabindex="-1" class="admin-main staff-stay-main">
+  <a class="text-link admin-back" th:href="@{/admin/stays(reference=${referenceFilter},arrival=${arrivalFilter},state=${stateFilter})}">← 返回预订清单</a>
+  <aside class="admin-notice">本地 UI 演示 · 虚构联系资料与固定状态，不代表真实订单、支付或房间分配。</aside>
+  <div class="stay-page-heading"><p class="section-label" th:text="${entry.reference}"></p><h1>预订详情</h1><span class="stay-state" th:classappend="${'state-' + #strings.toLowerCase(entry.state.name())}" th:text="${entry.state.label()} + ' · 示例'"></span></div>
+  <div class="staff-stay-detail-grid">
+    <section class="staff-stay-panel" aria-labelledby="stay-title"><p class="section-label">STAY DETAILS</p><h2 id="stay-title">入住安排</h2><dl class="stay-facts"><div><dt>预订编号</dt><dd th:text="${entry.reference}"></dd></div><div><dt>房型</dt><dd th:text="${entry.roomType}"></dd></div><div><dt>入住 / 退房</dt><dd><span th:text="${entry.arrival}"></span><br><span th:text="${entry.departure}"></span></dd></div><div><dt>数量 / 晚数</dt><dd th:text="${entry.rooms} + ' 间 / ' + ${entry.nights()} + ' 晚'"></dd></div><div><dt>分配房号</dt><dd>待预订服务提供</dd></div></dl><p class="stay-help">分配结果由预订服务返回，此页面不自行挑选或占用房间。</p></section>
+    <section class="staff-stay-panel" aria-labelledby="guest-title"><p class="section-label">GUEST INFORMATION</p><h2 id="guest-title">住客资料</h2><dl class="stay-facts"><div><dt>入住人</dt><dd th:text="${entry.guestName}"></dd></div><div><dt>联系邮箱</dt><dd th:text="${entry.guestEmail}"></dd></div></dl><p class="stay-help">仅供页面验证的示例资料；正式数据需要工作人员权限与服务端访问校验。</p></section>
+    <section class="staff-stay-panel" aria-labelledby="payment-title"><p class="section-label">PAYMENT SNAPSHOT</p><h2 id="payment-title">费用与状态</h2><dl class="stay-facts"><div><dt>预订状态</dt><dd th:text="${entry.state.bookingLabel()}"></dd></div><div><dt>支付状态</dt><dd th:text="${entry.state.paymentLabel()}"></dd></div><div><dt>示例总价</dt><dd class="stay-total" th:text="${entry.totalLabel()}"></dd></div><div><dt>会员优惠</dt><dd th:text="${entry.discountLabel}"></dd></div></dl><p class="stay-help">金额为预先编写的展示快照；空值表示待报价。实际成交价与优惠由对应服务提供。</p><p class="staff-review-note" th:if="${entry.state.name() == 'REVIEW'}">支付结果待核对。实际业务应先向支付服务核对结果，再决定后续操作。</p></section>
+    <section class="staff-stay-panel" aria-labelledby="actions-title"><p class="section-label">OPERATIONS</p><h2 id="actions-title">管理操作</h2><p class="stay-help" id="operations-help">当前仅提供只读预览。以下操作待预订 / 支付服务确认规则并接入后启用。</p><div class="staff-stay-actions"><button class="outline-button" type="button" disabled aria-describedby="operations-help">变更预订状态 · 待接入</button><button class="outline-button" type="button" disabled aria-describedby="operations-help">核对支付结果 · 待接入</button></div><p class="stay-help">此处不会确认收款、取消或改期，也不会释放库存。</p></section>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

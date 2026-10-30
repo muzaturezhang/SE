@@ -1,0 +1,52 @@
+{
+  "roomTypes": [
+    {
+      "id": "courtyard",
+      "name": "庭院客房",
+      "englishName": "COURTYARD ROOM",
+      "description": "温暖的木色、柔软的织物与自然光。适合两人短住的安静空间。",
+      "imagePath": "/images/suite-interior.jpg",
+      "imageAlt": "暖色木饰与白色床品的庭院客房展示",
+      "features": ["庭院景观", "双人入住"],
+      "nightlyRateMinor": 98000
+    },
+    {
+      "id": "terrace",
+      "name": "露台套房",
+      "englishName": "TERRACE SUITE",
+      "description": "将露台作为起居的一部分。留出阅读、休息，以及与同行人相处的空间。",
+      "imagePath": "/images/coastal-retreat.jpg",
+      "imageAlt": "露台与热带绿植环绕的度假居所展示",
+      "features": ["户外露台", "独立起居空间"],
+      "nightlyRateMinor": 168000
+    },
+    {
+      "id": "pool",
+      "name": "泳池别墅",
+      "englishName": "POOL VILLA",
+      "description": "泳池、露台与室内居所相连，为长一些的假期留出充裕空间。",
+      "imagePath": "/images/tropical-pool.jpg",
+      "imageAlt": "泳池与棕榈树相邻的度假别墅展示",
+      "features": ["泳池空间", "户外休憩区"],
+      "nightlyRateMinor": 328000
+    }
+  ],
+  "rooms": [
+    {"id": "C101", "roomTypeId": "courtyard", "enabled": true},
+    {"id": "C102", "roomTypeId": "courtyard", "enabled": true},
+    {"id": "C103", "roomTypeId": "courtyard", "enabled": true},
+    {"id": "C104", "roomTypeId": "courtyard", "enabled": true},
+    {"id": "C105", "roomTypeId": "courtyard", "enabled": false},
+    {"id": "T201", "roomTypeId": "terrace", "enabled": true},
+    {"id": "T202", "roomTypeId": "terrace", "enabled": true},
+    {"id": "P301", "roomTypeId": "pool", "enabled": true}
+  ],
+  "blocks": [
+    {"roomId": "C101", "arrivalOffsetDays": 2, "departureOffsetDays": 4},
+    {"roomId": "C102", "arrivalOffsetDays": 4, "departureOffsetDays": 6},
+    {"roomId": "C103", "arrivalOffsetDays": 2, "departureOffsetDays": 6},
+    {"roomId": "T201", "arrivalOffsetDays": 2, "departureOffsetDays": 3},
+    {"roomId": "T202", "arrivalOffsetDays": 3, "departureOffsetDays": 4},
+    {"roomId": "P301", "arrivalOffsetDays": 2, "departureOffsetDays": 4}
+  ]
+}

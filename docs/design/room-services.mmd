@@ -1,0 +1,29 @@
+classDiagram
+class RoomPageController
+class RoomAdminController
+class RoomQueryService {
+ <<interface>>
+ +listRoomTypes() List~RoomType~
+ +search(RoomSearchQuery query) RoomSearchResult
+}
+class DefaultRoomQueryService
+class RoomManagementService
+class RoomRepository {
+ <<interface>>
+ +readSnapshot() RoomInventory
+}
+class RoomInventoryEditor {
+ <<interface>>
+ +updateSnapshot(UnaryOperator~RoomInventory~ change) void
+}
+class InMemoryRoomRepository
+RoomPageController --> RoomQueryService
+RoomAdminController --> RoomManagementService
+RoomAdminController --> RoomQueryService : catalog reads
+DefaultRoomQueryService ..|> RoomQueryService
+DefaultRoomQueryService --> RoomRepository
+RoomManagementService --> RoomInventoryEditor
+RoomInventoryEditor --|> RoomRepository
+InMemoryRoomRepository ..|> RoomInventoryEditor
+note for RoomManagementService "Concrete class; Clock injected; no Booking allocation port"
+note for InMemoryRoomRepository "dev/test only; immutable snapshot; synchronized update"

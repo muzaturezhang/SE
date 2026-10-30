@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('预订管理 · 本地演示')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+<nav th:replace="~{fragments/layout :: staffNav}"></nav>
+<main id="main-content" tabindex="-1" class="admin-main staff-stay-main">
+  <div class="admin-heading"><div><p class="section-label">RESERVATIONS</p><h1>预订管理</h1><p>从入住安排到支付状态，查看每一笔预订的摘要。</p></div><a class="text-link" th:href="@{/admin/rooms}">房间与房型 ↗</a></div>
+  <aside class="admin-notice">本地 UI 演示 · 以下 6 条为独立虚构记录，不含客户草稿。状态和金额仅供展示，没有创建实际订单、占用库存或发生扣款。</aside>
+  <form class="admin-filters staff-stay-filters" method="get" th:action="@{/admin/stays}">
+    <div class="admin-field"><label for="reference">预订编号</label><input id="reference" name="reference" type="search" maxlength="40" placeholder="输入完整或部分编号" th:value="${referenceFilter}" aria-describedby="reference-help"><p id="reference-help">字母、数字或短横线；不区分大小写</p></div>
+    <div class="admin-field"><label for="arrival">入住日期</label><input id="arrival" name="arrival" type="date" th:value="${arrivalFilter}"><p>按入住当天筛选，不限制历史日期</p></div>
+    <div class="admin-field"><label for="state">预订状态</label><select id="state" name="state"><option value="all" th:selected="${stateFilter == 'all'}">全部状态</option><option th:each="item : ${states}" th:value="${item.name()}" th:text="${item.label()}" th:selected="${#strings.equalsIgnoreCase(stateFilter, item.name())}"></option></select><p>状态为只读页面示例</p></div>
+    <button class="outline-button" type="submit">筛选预订</button><a class="text-link" th:href="@{/admin/stays}">重置</a>
+  </form>
+  <p class="admin-errors" role="alert" th:if="${filterError}" th:text="${filterError}"></p>
+  <section aria-labelledby="reservation-list-title" th:unless="${filterError}">
+    <div class="admin-section-heading"><h2 id="reservation-list-title">预订清单</h2><p role="status" th:text="${entries.size()} + ' 条演示记录'"></p></div>
+    <div class="staff-stay-list">
+      <article class="staff-stay-row" th:each="item : ${entries}">
+        <div class="staff-stay-identity"><p class="section-label" th:text="${item.reference}"></p><h3 th:text="${item.guestName}"></h3><p th:text="${item.roomType} + ' · ' + ${item.rooms} + ' 间'"></p></div>
+        <dl class="staff-stay-dates"><div><dt>入住</dt><dd th:text="${item.arrival}"></dd></div><div><dt>退房</dt><dd th:text="${item.departure}"></dd></div></dl>
+        <div class="staff-stay-status"><span class="stay-state" th:classappend="${'state-' + #strings.toLowerCase(item.state.name())}" th:text="${item.state.label()}"></span><p th:text="${item.totalLabel()}"></p></div>
+        <a class="text-link" th:href="@{/admin/stays/{id}(id=${item.reference},reference=${referenceFilter},arrival=${arrivalFilter},state=${stateFilter})}" th:attr="aria-label='查看预订 ' + ${item.reference}">查看详情 ↗</a>
+      </article>
+      <div class="stay-empty" th:if="${entries.isEmpty()}"><h3>没有符合条件的预订</h3><p>请调整编号、入住日期或状态，也可以重置筛选查看全部演示记录。</p><a class="text-link" th:href="@{/admin/stays}">重置筛选 ↗</a></div>
+    </div>
+  </section>
+  <p class="admin-help">此页面只读。确认 / 取消 / 改期、支付核对和库存释放的实际操作，需由预订与支付服务接入后启用。</p>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

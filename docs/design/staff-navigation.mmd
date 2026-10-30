@@ -1,0 +1,16 @@
+flowchart TD
+ LOGIN["本地登录 /staff-preview/login"] -->|"Spring Security 成功固定跳转"| ROOMS["房间管理 /admin/rooms"]
+ ROOMS --> NEW["GET /admin/rooms/new"]
+ NEW -->|"POST /admin/rooms CSRF PRG"| ROOMS
+ ROOMS --> EDIT["GET /admin/rooms/roomId/edit"]
+ EDIT -->|"POST 更新或停用 CSRF PRG"| ROOMS
+ ROOMS --> RATE["GET /admin/room-types/typeId/rate"]
+ RATE -->|"POST 基础价 CSRF PRG"| ROOMS
+ ROOMS <-->|"staff-booking-ui 后台导航"| STAYS["GET /admin/stays"]
+ STAYS --> DETAIL["GET /admin/stays/id"]
+ DETAIL -->|"保留筛选"| STAYS
+ DETAIL --> DISABLED["状态变更与核对禁用 无 POST"]
+ ROOMS -->|"POST /logout CSRF"| PUBLIC["/rooms"]
+ STAYS -->|"POST /logout CSRF"| PUBLIC
+ GUARD["所有 admin 请求均要求 ROLE_STAFF"] -.-> ROOMS
+ GUARD -.-> STAYS

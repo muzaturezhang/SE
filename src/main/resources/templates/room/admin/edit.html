@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${editing} ? '编辑房间' : '新增房间')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+<nav th:replace="~{fragments/layout :: staffNav}"></nav>
+<main id="main-content" tabindex="-1" class="admin-main admin-editor">
+  <a class="text-link admin-back" th:href="@{/admin/rooms}">← 返回房间清单</a>
+  <p class="section-label">ROOM DETAILS</p><h1 th:text="${editing} ? '编辑房间 · ' + ${roomForm.roomId} : '新增房间'"></h1>
+  <p class="admin-lead">每个房号对应一间具体客房。房价由所属房型统一提供。</p>
+  <form th:action="${editing} ? @{/admin/rooms/{id}(id=${roomForm.roomId})} : @{/admin/rooms}" th:object="${roomForm}" method="post" class="admin-form">
+    <div th:if="${#fields.hasAnyErrors()}" class="admin-errors" role="alert"><h2>请检查房间信息</h2><ul><li th:each="error : ${formErrors}" th:text="${error}"></li></ul></div>
+    <div class="admin-field"><label for="roomId">房号</label><input type="text" th:field="*{roomId}" th:readonly="${editing}" maxlength="20" pattern="[A-Z0-9][A-Z0-9-]{0,19}" required aria-describedby="room-id-help"><p id="room-id-help" th:text="${editing} ? '房号是固定标识，保留原值以关联历史记录。' : '1–20 位大写字母、数字或短横线，例如 C106。'"></p></div>
+    <div class="admin-field"><label for="roomTypeId">所属房型</label><select th:field="*{roomTypeId}" required><option value="">请选择房型</option><option th:each="type : ${roomTypes}" th:value="${type.id}" th:text="${type.name}"></option></select></div>
+    <div class="admin-field"><label for="enabled">房间状态</label><select th:field="*{enabled}"><option value="true">启用 · 纳入可售库存</option><option value="false">停用 · 保留记录并退出库存</option></select></div>
+    <p class="admin-notice" th:if="${editing and managedRoom.activeOrFutureBlock}">该房间有当前或未来占用。可保留当前设置，但不能停用或更换房型。</p>
+    <div class="admin-form-actions"><button class="solid-button" type="submit" th:text="${editing} ? '保存房间设置' : '新增房间'">保存房间设置</button><a class="text-link" th:href="@{/admin/rooms}">取消</a></div>
+  </form>
+  <section id="disable-room" class="admin-disable" th:if="${editing and managedRoom.room.enabled and !managedRoom.activeOrFutureBlock}"><h2>停用此房间</h2><p>停用后不再出现在可售库存中。房号和历史记录会保留，可通过编辑页面重新启用。</p><form th:action="@{/admin/rooms/{id}/disable(id=${roomForm.roomId})}" method="post"><button class="outline-button" type="submit" th:text="'确认停用 ' + ${roomForm.roomId}">确认停用</button></form></section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

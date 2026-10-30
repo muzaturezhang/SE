@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('会员开通与续费 · 演示')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('account')}"></header>
+<nav th:replace="~{fragments/layout :: accountNav('membership')}"></nav>
+<main id="main-content" tabindex="-1" class="account-main"><aside th:replace="~{fragments/layout :: accountPreviewNote}"></aside>
+  <a class="text-link stay-back" th:href="@{/preview/account/membership}">← 返回会员页面</a>
+  <div class="account-page-heading"><p class="section-label">MEMBERSHIP ARRANGEMENT</p><h1 th:text="${intent == 'renew'} ? '会员续费页面' : '会员开通页面'"></h1><p>在这里确认会员服务返回的方案，再进入后续支付流程。</p></div>
+  <div class="account-membership-grid"><section class="account-member-state"><h2>方案与费用</h2><dl class="stay-facts"><div><dt>操作类型</dt><dd th:text="${intent == 'renew'} ? '续费页面演示' : '开通页面演示'"></dd></div><div><dt>会员费</dt><dd class="stay-total" th:text="${membership.feeLabel()}"></dd></div><div><dt>会员有效期</dt><dd>待会员服务返回</dd></div><div><dt>住宿优惠</dt><dd th:text="${membership.discountLabel}"></dd></div></dl><div class="payment-integration-note" id="membership-payment-help"><h3>会员 / 支付服务待接入</h3><p>本页不收取费用，也不会改变会员资格。方案、资格校验、费用、付款入口和开通结果均由后续服务返回。</p></div><button class="solid-button" type="button" disabled aria-describedby="membership-payment-help">会员 / 支付服务待接入</button></section><img class="account-membership-photo" th:src="@{/images/coastal-retreat.jpg}" alt="绿植环绕的安静度假露台" width="1400" height="996"></div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

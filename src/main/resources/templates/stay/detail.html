@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('预订详情 · 演示')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('stay')}"></header>
+<nav th:replace="~{fragments/layout :: stayNav('list')}"></nav>
+<main id="main-content" tabindex="-1" class="stay-main">
+  <aside th:replace="~{fragments/layout :: stayPreviewNote}"></aside>
+  <a class="text-link stay-back" th:href="${previewBase}">← 我的预订</a>
+  <p class="admin-success" th:if="${previewMessage}" th:text="${previewMessage}" role="status"></p>
+  <div class="stay-page-heading"><p class="section-label" th:text="${reservation.reference}"></p><h1>预订详情</h1><span class="stay-state" th:classappend="${'state-' + #strings.toLowerCase(reservation.state.name())}" th:text="${reservation.state.label()} + ' · 示例'"></span></div>
+  <div class="stay-columns">
+    <div class="stay-detail-copy"><section class="stay-form-section"><h2>入住与联系资料</h2><dl class="stay-facts"><div><dt>入住人</dt><dd th:text="${reservation.guestName}"></dd></div><div><dt>联系邮箱</dt><dd th:text="${reservation.guestEmail}"></dd></div><div><dt>记录编号</dt><dd th:text="${reservation.reference}"></dd></div><div><dt>当前状态</dt><dd th:text="${reservation.state.label()}"></dd></div></dl><p class="stay-help" th:text="${reservation.state.description()}"></p></section>
+      <section class="stay-form-section"><h2>费用摘要</h2><dl class="stay-facts"><div><dt th:text="${reservation.draft()} ? '待付金额' : '示例金额'"></dt><dd class="stay-total" th:text="${reservation.totalLabel()}"></dd></div><div><dt>会员优惠</dt><dd th:text="${reservation.discountLabel}"></dd></div></dl><p class="stay-help">示例金额为固定展示数据，草稿不会根据基础价自行计算订单总价。</p></section>
+      <div class="stay-detail-actions"><a class="solid-button" th:href="${previewBase} + '/' + ${reservation.reference} + '/payment'">查看支付页面 →</a><a class="text-link" th:if="${reservation.draft()}" th:href="${previewBase} + '/new?roomType=' + ${reservation.stay.roomTypeId} + '&amp;arrival=' + ${reservation.stay.arrival} + '&amp;departure=' + ${reservation.stay.departure} + '&amp;rooms=' + ${reservation.stay.rooms}">调整入住安排</a></div>
+    </div><aside th:replace="~{fragments/layout :: staySummary(${reservation.stay})}"></aside>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

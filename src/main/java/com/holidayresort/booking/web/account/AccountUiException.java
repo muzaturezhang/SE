@@ -1,0 +1,7 @@
+package com.holidayresort.booking.web.account;
+
+public class AccountUiException extends RuntimeException {
+    private final int status;
+    public AccountUiException(int status, String message) { super(message); this.status = status; }
+    public int status() { return status; }
+}

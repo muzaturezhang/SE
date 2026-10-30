@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('账户注册 · 演示')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('account')}"></header>
+<nav th:replace="~{fragments/layout :: accountNav('register')}"></nav>
+<main id="main-content" tabindex="-1" class="account-main">
+  <aside th:replace="~{fragments/layout :: accountPreviewNote}"></aside>
+  <div class="account-auth-grid"><section class="account-introduction"><p class="section-label">BEGIN YOUR NEXT CHAPTER</p><h1>开启下一段假期</h1><p>先完善账户资料，再安排属于您的入住体验。</p><img th:src="@{/images/suite-interior.jpg}" alt="暖色木饰与柔软床品的度假客房" width="1400" height="996"><p class="account-photo-caption">Holiday Resort · 安静的度假时光</p></section>
+    <section class="account-auth-panel" aria-labelledby="register-title"><p class="section-label">CREATE YOUR ACCOUNT</p><h2 id="register-title">账户注册</h2><p class="account-form-lead">仅校验表单并预览结果，不创建真实账号或发送邮件。</p>
+      <div th:replace="~{fragments/layout :: accountErrors}"></div>
+      <form th:action="@{/preview/account/register}" th:object="${registerForm}" method="post" class="account-form" autocomplete="off">
+        <input type="hidden" name="next" th:value="${returnTarget}">
+        <div class="admin-field"><label for="displayName">姓名</label><input type="text" th:field="*{displayName}" maxlength="80" required autocomplete="off"></div>
+        <div class="admin-field"><label for="email">邮箱</label><input type="email" th:field="*{email}" maxlength="254" required autocomplete="off"></div>
+        <div class="admin-field"><label for="password">演示密码</label><input type="password" id="password" name="password" maxlength="256" required autocomplete="off"></div>
+        <div class="admin-field"><label for="confirmPassword">再次输入演示密码</label><input type="password" id="confirmPassword" name="confirmPassword" maxlength="256" required autocomplete="off" aria-describedby="registration-password-help"><p id="registration-password-help">两次输入须一致。密码不会保存；正式复杂度规则由账号服务确认。</p></div>
+        <p class="account-return" th:text="'完成登录演示后返回：' + ${returnLabel}"></p>
+        <button class="solid-button" type="submit">预览注册结果 <span aria-hidden="true">→</span></button>
+      </form>
+      <p class="account-switch">已有账户？<a th:href="@{/preview/account/login(next=${returnTarget})}">返回登录页面 ↗</a></p>
+      <nav class="account-examples" aria-label="注册状态示例"><a th:href="@{/preview/account/register(next=${returnTarget})}">正常表单</a><a th:href="@{/preview/account/register(next=${returnTarget},example='duplicate')}">查看邮箱已注册提示示例</a></nav>
+    </section>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>
