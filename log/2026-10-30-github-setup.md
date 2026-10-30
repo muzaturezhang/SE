@@ -8,4 +8,8 @@
 
 上传前检查：228个候选文件约7.89MiB，最大文件约1.39MiB；工程缓存/JDK、临时STAFF密码、target、deliverables、SE课程资料不在提交范围，已知本机生成密码未出现在候选文件内容中。
 
-计划先创建main初始版本，再提供b-room-ui用于后续个人开发。此条记录随首个提交保存；首次push的实际结果和最终分支状态将在后续记录更新，不将计划当作已完成。没有创建PR、合并队友分支、调整可见性/权限或main保护规则。
+实际结果：首次本地提交e48af50完成（229文件，含本条新日志）。HTTPS push因缺Username凭证失败，未上传；随后以BatchMode和严格已知主机检查验证已有SSH登录成功，将origin改为git@github.com:muzaturezhang/SE.git，main首推成功。再建立并push b-room-ui成功，两者初始指向e48af50。
+
+用户随后表示准备配置Token；已说明现有SSH登录已完成推送，本次不需要新PAT，没有索要、创建或保存Token。没有安装gh、修改全局Git/SSH安全配置或关闭证书/主机验证。
+
+本记录与CURRENT的实际结果会作为后续文档提交保存，并将main/b-room-ui按快进方式同步；具体最新SHA以git log和远程refs为准。未创建PR、合并队友代码、调整仓库可见性/协作者权限或main保护规则。当前分支用于B后续开发。

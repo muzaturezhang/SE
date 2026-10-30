@@ -4,7 +4,11 @@
 
 ## GitHub 连接状态
 
-2026-10-30用户提供仓库https://github.com/muzaturezhang/SE.git，已绑定本地origin；仅工程子目录为Git根，上层SE不上传。远程为空，正在建立main首个版本与个人b-room-ui分支；实际push结果见log/2026-10-30-github-setup.md及Git远端。下文“无提交/远程”等为之前阶段记录，Git状态以本节的最新补充为准。
+2026-10-30已上传至https://github.com/muzaturezhang/SE：main与b-room-ui首推成功，初始源码提交e48af50，后续文档提交以git log/远端refs为准。当前B开发使用b-room-ui；main为团队启动版本。仅holiday-resort-booking为Git根，上层SE及课程资料不上传。
+
+origin使用git@github.com:muzaturezhang/SE.git，通过机器已有SSH身份推送，不需要本次新建Token。HTTPS最初因缺凭证失败，之后SSH推送已成功；未改全局认证、仓库可见性或分支保护。远程仓库原本为空且public，主干保护/协作者邀请仍由团队后续配置。
+
+实际操作见log/2026-10-30-github-setup.md。下文“无提交/远程”等是之前阶段历史，Git状态以本节与实际Git记录为准。
 
 ## 路径与责任
 
@@ -15,7 +19,7 @@
 
 ## 已完成
 
-- 独立骨架、Wrapper、模块目录、log/handoff；本地main无提交/远程。
+- 独立骨架、Wrapper、模块目录、log/handoff；已完成GitHub main初始上传，B使用b-room-ui分支。
 - Room/RoomType/StayPeriod/RoomBlock/RoomInventory与只读Service，整数分、共享Clock、半开日期区间；整个住期同一批物理房间连续可用。查询不占库存。
 - 客户首页/目录/详情/后端日期房型数量查询、可读400与空结果。
 - STAFF房间管理：列表/筛选/新增/编辑/停用/重新启用/房型基础价；房号固定唯一，当前/未来有效Block阻止停用/换型，内存原子修改；没有物理删除。
