@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('个人中心')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('account')}"></header>
+<nav th:replace="~{fragments/layout :: memberNav('profile')}"></nav>
+<main id="main-content" tabindex="-1" class="account-main">
+  <p class="admin-success" role="status" th:if="${accountMessage}" th:text="${accountMessage}"></p>
+  <div class="account-page-heading"><p class="section-label">YOUR HOLIDAY ACCOUNT</p><h1 th:text="'欢迎，' + ${profile.displayName}"></h1><p>您的账户资料、会员状态与入住安排，汇集于此。</p></div>
+  <div class="account-profile-grid">
+    <section class="account-profile-details"><h2>个人资料</h2><dl class="stay-facts"><div><dt>姓名</dt><dd th:text="${profile.displayName}"></dd></div><div><dt>联系邮箱</dt><dd th:text="${profile.email}"></dd></div><div><dt>注册日期</dt><dd th:text="${profile.registeredOn}"></dd></div><div><dt>账户身份</dt><dd>Customer</dd></div></dl><p class="stay-help">预订、支付与提醒由对应服务接入；本页只展示账号服务返回的资料。</p></section>
+    <section class="account-member-summary"><p class="section-label">MEMBERSHIP</p><h2>会员与权益</h2><span class="stay-state" th:text="${membershipView.stateLabel}"></span><p>查看会员状态、有效期与开通方式。</p><a class="text-link" th:href="@{/account/membership}">查看会员页面 ↗</a></section>
+  </div>
+  <section class="account-stays-entry"><div><p class="section-label">YOUR NEXT STAY</p><h2>下一段假期，从这里开始</h2><p>查看预订记录，或重新选择心仪的居所与日期。</p><div class="account-entry-actions"><a class="solid-button" th:if="${bookingUiPreview == true}" th:href="@{/preview/stays}">我的预订 →</a><a class="text-link" th:href="@{/rooms#stay-search}">探索客房 ↗</a></div></div><img th:src="@{/images/coastal-retreat.jpg}" alt="绿植与露台相连的海岸度假居所" width="1400" height="996" loading="lazy"></section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

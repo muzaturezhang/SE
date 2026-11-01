@@ -5,10 +5,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import com.holidayresort.booking.member.application.port.StaffDirectory;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 /** Disposable, opt-in local UI verification only. A supplies the real authentication module. */
 @Configuration
@@ -23,12 +22,11 @@ public class LocalStaffPreviewConfiguration {
     }
 
     @Bean
-    UserDetailsService localStaffPreviewUsers(@Value("${LOCAL_STAFF_USERNAME}") String username,
-            @Value("${LOCAL_STAFF_PASSWORD}") String password) {
+    ApplicationRunner localStaffPreviewProvisioner(StaffDirectory staffDirectory, PasswordEncoder passwordEncoder,
+            @Value("${LOCAL_STAFF_USERNAME}") String username, @Value("${LOCAL_STAFF_PASSWORD}") String password) {
         if (username.isBlank() || password.length() < 16) {
             throw new IllegalStateException("Local preview requires a username and a password of at least 16 characters");
         }
-        return new InMemoryUserDetailsManager(User.withUsername(username)
-                .password("{bcrypt}" + new BCryptPasswordEncoder().encode(password)).roles("STAFF").build());
+        return args -> staffDirectory.add(new StaffDirectory.StaffRecord(username, passwordEncoder.encode(password)));
     }
 }

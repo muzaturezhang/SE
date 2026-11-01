@@ -36,3 +36,7 @@ app:
   timezone: Asia/Shanghai
   currency: CNY
   booking-hold-minutes: ${BOOKING_HOLD_MINUTES:15}
+  membership:
+    fee-minor: ${MEMBERSHIP_FEE_MINOR:68000}
+    discount-percent: ${MEMBERSHIP_DISCOUNT_PERCENT:5}
+    duration-days: ${MEMBERSHIP_DURATION_DAYS:365}
