@@ -1,6 +1,6 @@
 # 当前交接
 
-更新时间：2026-10-30，Asia/Shanghai。B第一批Room查询、第二批房间管理、第三批预订流程UI、第四批账户/会员UI、第五批工作人员预订只读UI均已完成本地实现与开发验证。设计整理已新增Room类图/CRC、导航、查询交互、UI原则与团队接入材料。真实身份、Booking/Payment、会员规则和数据库仍未接入。
+更新时间：2026-11-01，Asia/Shanghai。B第一批Room查询、第二批房间管理、第三批预订流程UI、第四批账户/会员UI、第五批工作人员预订只读UI均已完成本地实现与开发验证；设计整理已新增Room类图/CRC、导航、查询交互、UI原则与团队接入材料。2026-11-01 A 完成第一批真实注册/登录/资料/会员与身份接入（见下方 A 第一批）。Booking/Payment、真实持久化与通知仍未接入。
 
 ## GitHub 连接状态
 
@@ -9,6 +9,16 @@
 origin使用git@github.com:muzaturezhang/SE.git，通过机器已有SSH身份推送，不需要本次新建Token。HTTPS最初因缺凭证失败，之后SSH推送已成功；未改全局认证、仓库可见性或分支保护。远程仓库原本为空且public，主干保护/协作者邀请仍由团队后续配置。
 
 实际操作见log/2026-10-30-github-setup.md。下文“无提交/远程”等是之前阶段历史，Git状态以本节与实际Git记录为准。
+
+## A 第一批：真实账户、登录与会员接入（2026-11-01）
+
+- 用户 A 授权在 B 已下载的仓库基础上完成 A 的模块工作。`member` 包新增 Customer/Membership 领域、MemberRepository/MembershipRepository/StaffDirectory 端口、RegistrationService/MembershipService、ResortUserDetailsService 与内存适配；写操作在单进程内原子，仅 `!mysql & (dev | test)` 提供，与 Room 适配同一模式。
+- 新增真实客户路由 `/account/login`、`/account/register`、`/account`、`/account/membership`、`/account/membership/join`（GET/POST）与共享 `POST /logout`。SecurityConfiguration 主链接入 CUSTOMER/STAFF 表单登录与角色跳转；`/account/**` 匿名跳登录页，其余受保护或未知路径匿名保持 403。
+- B 的 local-staff 预览由新增 StaffPreviewSecurityConfiguration（@Order(1)）保持 `/staff-preview/login` 与 `/admin/**` 原行为；LocalStaffPreviewConfiguration 改为向 StaffDirectory 预置 STAFF，不再创建 InMemoryUserDetailsManager。
+- 密码 BCrypt、8–72 字符且含字母数字；邮箱大小写不敏感唯一；principal 名为内部顾客 ID。会员基线 CNY 680.00、住宿 95 折、自支付确认日起 365 天；申请保持待确认，`confirmPayment` 由 C 核对后调用。
+- 页面模板 `member/*` 复用 B 的暖白视觉、布局与导航；共享 header 增加“我的账户 / 账户登录”入口。B 的 preview 路由与演示投影未改动。
+- 文档新增 `docs/requirements/member-account.md`、`docs/test/member-account-tests.md`、`docs/glossary.md`；`docs/interfaces.md`、`docs/decisions.md` 追加 A 契约与决策，含 R01/R04 初答。R02/R03/R05–R07 待 B/C/D 共同评审。
+- 验证状态：本机 JDK 24.0.1（编译目标 17）+ 项目本地 Maven 3.9.11，`verify` BUILD SUCCESS，249 项测试 0 失败/错误/跳过；JAR dev 冒烟含注册→登录→个人中心→会员全流程（见 log/2026-11-01-member-module.md）。真实 JDK17/MySQL、浏览器人工检查、联调与团队评审未完成。
 
 ## 路径与责任
 
@@ -83,7 +93,7 @@ handoff/B-team-integration.md按A/C/D列输入、R01..R07评审问题和未来�
 ## 仍待接入与下一步
 
 1. 已完成当前源码对应的Room class diagram/CRC、页面导航、availability interaction、逐页原则和接口交接草案。下一步按B-team-integration.md的R01..R07由各owner评审，修改草案并准备真实联调；正式Q3/Q4仍需同版本集成证据。
-2. A提供真实账号/密码策略、CUSTOMER/STAFF Session、本人资料和会员资格/费用/权益/有效期；C接会员付款。当前账户UI不认证。
+2. A已提供第一批真实注册/登录/密码策略/本人资料与会员基线（见上方 A 第一批）；待 B/C/D 评审 R01/R04 初答并完成联调，C 接会员付款与 confirmPayment。`/preview/account` 路由仍不认证。
 3. A/C评审客户/工作人员Gateway：真实主体与Service授权、归属/员工数据范围、报价/快照、创建幂等、列表分页/排序、独立状态、联系字段/房号、错误映射。不能只换Mock Bean就宣称真实集成；匿名客户preview不能接真实数据。
 4. C/D补Booking事务内复核/分配/占用/释放、支付创建/回调/核对、与Room统一锁策略；D实现MySQL读写/schema/迁移。mysql仍缺业务端口而拒绝启动。
 5. 工作人员变更状态/支付核对按钮保持禁用；取消/改期、3天/1天提醒Q8仍待确认实现范围。没有邮件/扣款/自动过期业务。

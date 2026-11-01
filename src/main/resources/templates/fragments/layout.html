@@ -17,7 +17,7 @@
         <svg viewBox="0 0 24 16" width="24" height="16" aria-hidden="true"><path d="M0 3h24M0 12h24"/></svg><span>探索</span>
       </button>
       <a class="wordmark" th:href="@{/}" aria-label="Holiday Resort 首页">Holiday<span>R E S O R T</span></a>
-      <div class="nav-actions"><a class="nav-room-link" th:href="@{/rooms}" th:attr="aria-current=${activePage == 'rooms' ? 'page' : null}">客房与别墅</a><a class="outline-button reserve-link" th:href="@{/rooms#stay-search}">预订住宿</a></div>
+      <div class="nav-actions"><a class="nav-room-link" th:href="@{/rooms}" th:attr="aria-current=${activePage == 'rooms' ? 'page' : null}">客房与别墅</a><a class="outline-button account-link" th:if="${customerSignedIn}" th:href="@{/account}" th:text="'我的账户 · ' + ${customerDisplayName}">我的账户</a><a class="outline-button account-link" th:unless="${customerSignedIn}" th:href="@{/account/login}">账户登录</a><a class="outline-button reserve-link" th:href="@{/rooms#stay-search}">预订住宿</a></div>
     </nav>
     <dialog id="navigation-dialog" class="navigation-dialog" aria-labelledby="navigation-title">
       <div class="dialog-top"><p class="section-label" id="navigation-title">EXPLORE HOLIDAY</p><button class="close-button" type="button" data-close-dialog aria-label="关闭导航">×</button></div>
@@ -26,7 +26,9 @@
         <a th:href="@{/rooms}"><span>02</span>客房与别墅</a>
         <a th:href="@{/rooms#stay-search}"><span>03</span>安排入住</a>
         <a th:href="@{/#before-arrival}"><span>04</span>入住须知</a>
-        <a th:if="${accountUiPreview == true}" th:href="@{/preview/account}"><span>05</span>我的账户 · 演示</a>
+        <a th:if="${customerSignedIn}" th:href="@{/account}"><span>05</span>我的账户</a>
+        <a th:unless="${customerSignedIn}" th:href="@{/account/login}"><span>05</span>账户登录</a>
+        <a th:if="${accountUiPreview == true}" th:href="@{/preview/account}"><span>06</span>我的账户 · 演示</a>
       </nav>
       <p class="dialog-footnote">Holiday Resort · 海岸度假居所</p>
     </dialog>
@@ -66,6 +68,9 @@
   </aside>
   <nav th:fragment="accountNav(active)" class="account-nav" aria-label="账户导航">
     <a th:href="@{/}">← 返回度假村</a><div><a th:href="@{/preview/account}" th:attr="aria-current=${active == 'profile' ? 'page' : null}">个人中心</a><a th:href="@{/preview/account/membership}" th:attr="aria-current=${active == 'membership' ? 'page' : null}">会员</a><a th:if="${bookingUiPreview == true}" th:href="@{/preview/stays}">我的预订</a></div>
+  </nav>
+  <nav th:fragment="memberNav(active)" class="account-nav" aria-label="账户导航">
+    <a th:href="@{/}">← 返回度假村</a><div><a th:href="@{/account}" th:attr="aria-current=${active == 'profile' ? 'page' : null}">个人中心</a><a th:href="@{/account/membership}" th:attr="aria-current=${active == 'membership' ? 'page' : null}">会员</a><a th:if="${bookingUiPreview == true}" th:href="@{/preview/stays}">我的预订</a><form th:if="${customerSignedIn}" th:action="@{/logout}" method="post"><button class="plain-button" type="submit">退出登录</button></form></div>
   </nav>
   <aside th:fragment="accountPreviewNote" class="stay-preview-note" aria-label="账户演示说明"><strong>本地账户 UI 演示</strong><span>仅预览页面，不创建真实账号或会员，不保存密码，也不改变系统权限。请使用示例资料。</span></aside>
   <div th:fragment="accountErrors" class="admin-errors" th:if="${formErrors != null and not #lists.isEmpty(formErrors)}" role="alert"><h2>请检查账户信息</h2><ul><li th:each="error : ${formErrors}" th:text="${error}"></li></ul></div>

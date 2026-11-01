@@ -66,6 +66,12 @@ Windows PowerShell：
 
 同样使用 `./scripts/dev-ui.sh`，打开 <http://localhost:8080/admin/stays>，以本地 STAFF 身份登录。支持编号/入住日/状态组合筛选、详情与保留筛选的返回，以及房间/预订后台导航。记录为6条独立虚构样例，金额和状态只读；没有确认收款、取消/改期或库存释放。详见 [工作人员预订演示](docs/staff-stay-ui-demo.md)。默认开发环境不启用此入口。
 
+## 正式账户与会员（A）
+
+启动后打开 <http://localhost:8080/account/register> 可注册真实账户；`/account/login` 登录后进入个人中心 `/account` 与会员页 `/account/membership`。STAFF 与 CUSTOMER 共用同一登录页，登录后按角色跳转。
+
+密码以 BCrypt 存储，要求 8–72 个字符且同时包含字母和数字；邮箱大小写不敏感且唯一。会员基线为 CNY 680.00、住宿 95 折、自支付确认日起 365 天；开通申请保持待确认，待支付服务（C）核对后生效。开发环境数据在内存中，重启恢复；MySQL 持久化由 D 接入。需求与契约见 [Member 与账户需求](docs/requirements/member-account.md) 与 [接口登记](docs/interfaces.md)。
+
 ## 检查与打包
 
 ```sh
