@@ -1,16 +1,28 @@
 package com.holidayresort.booking.payment.domain;
 
 /**
- * Lifecycle states of a payment.
+ * Payment lifecycle state machine (DS 5.3).
  *
- * INITIATED  — payment request sent to provider, waiting for callback
- * SUCCEEDED  — provider confirmed payment, booking becomes PAID
- * FAILED     — provider rejected or user cancelled
- * UNDER_REVIEW — callback result unknown, staff must reconcile
+ * NEW -> PENDING -> PAID (terminal, exactly once)
+ *                 -> FAILED (terminal, definitive rejection)
+ *                 -> UNDER_REVIEW (result unknown, staff reconciles)
+ *                 -> EXPIRED (hold timeout)
  */
 public enum PaymentStatus {
-    INITIATED,
-    SUCCEEDED,
+    /** Just created, not yet sent to the provider. */
+    NEW,
+    /** Initiated at the provider, waiting for result. */
+    PENDING,
+    /** Confirmed success. Terminal. */
+    PAID,
+    /** Definitive rejection. Terminal. */
     FAILED,
-    UNDER_REVIEW
+    /** Result cannot be determined; staff must reconcile. */
+    UNDER_REVIEW,
+    /** Hold expired before payment completed. */
+    EXPIRED;
+
+    public boolean isTerminal() {
+        return this == PAID || this == FAILED;
+    }
 }
