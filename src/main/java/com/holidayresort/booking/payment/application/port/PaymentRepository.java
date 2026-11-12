@@ -7,11 +7,11 @@ import java.util.Optional;
 /** Persistence port for payments; D will provide the MySQL adapter. */
 public interface PaymentRepository {
 
-    Optional<Payment> findByPaymentId(String paymentId);
+    Optional<Payment> findById(String id);
 
-    Optional<Payment> findByProviderPaymentId(String providerPaymentId);
+    Optional<Payment> findByBookingReference(String bookingReference);
 
-    List<Payment> findByBookingReference(String bookingReference);
+    Optional<Payment> findByIdempotencyKey(String idempotencyKey);
 
     List<Payment> findAll();
 
