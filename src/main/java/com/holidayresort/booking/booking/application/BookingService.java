@@ -69,7 +69,7 @@ public class BookingService {
                 .filter(t -> t.id().equals(roomTypeId))
                 .findFirst()
                 .orElseThrow(() -> new BookingException(Kind.CONFLICT, "roomType",
-                        "所选日期的连续可用房间不足，请调整入住安排后重试。"));
+                        "Not enough rooms available for the selected dates. Please adjust your stay."));
         DiscountResult discount = memberships.discountFor(customerId);
         PriceSnapshot price = PriceSnapshot.of(type.nightlyRateMinor(), stay.nights(), roomCount,
                 discount.active() ? discount.discountPercent() : 0);
@@ -93,7 +93,6 @@ public class BookingService {
         StayPeriod stay = new StayPeriod(arrival, departure);
         DiscountResult discount = memberships.discountFor(customerId);
 
-        // Atomic inventory allocation: re-check and lock rooms inside one callback.
         List<String> allocated = new ArrayList<>();
         PriceSnapshot[] heldPrice = new PriceSnapshot[1];
         roomInventory.updateSnapshot(inv -> {
@@ -110,7 +109,7 @@ public class BookingService {
             }
             if (availableRooms.size() < roomCount) {
                 throw new BookingException(Kind.CONFLICT, "rooms",
-                        "所选日期的连续可用房间不足，请调整入住安排后重试。");
+                        "Not enough rooms available for the selected dates. Please adjust your stay.");
             }
             List<String> picked = availableRooms.subList(0, roomCount);
             allocated.addAll(picked);
@@ -137,17 +136,13 @@ public class BookingService {
     public Booking findByReference(String reference) {
         return bookings.findByReference(reference)
                 .orElseThrow(() -> new BookingException(Kind.NOT_FOUND, "reference",
-                        "找不到该预订。"));
+                        "Booking not found."));
     }
 
     public List<Booking> listByCustomer(String customerId) {
         return bookings.findByCustomerId(customerId);
     }
 
-    /**
-     * Release all pending bookings whose payment deadline has passed.
-     * Returns the number of bookings expired.
-     */
     public int releaseExpiredBookings() {
         LocalDateTime now = LocalDateTime.now(clock);
         List<Booking> pending = bookings.findAll().stream()
