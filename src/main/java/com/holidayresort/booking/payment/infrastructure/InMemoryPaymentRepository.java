@@ -10,42 +10,42 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
-/** In-memory payment store for dev/test; D will replace with MySQL. */
+/** Development adapter; D provides the MySQL adapter. */
 @Repository
-@Profile("!mysql")
+@Profile("!mysql & (dev | test)")
 public class InMemoryPaymentRepository implements PaymentRepository {
 
-    private final Map<String, Payment> store = new ConcurrentHashMap<>();
+    private final Map<String, Payment> byId = new ConcurrentHashMap<>();
+    private final Map<String, Payment> byBooking = new ConcurrentHashMap<>();
+    private final Map<String, Payment> byIdempotencyKey = new ConcurrentHashMap<>();
 
     @Override
-    public Optional<Payment> findByPaymentId(String paymentId) {
-        return Optional.ofNullable(store.get(paymentId));
+    public Optional<Payment> findById(String id) {
+        return Optional.ofNullable(byId.get(id));
     }
 
     @Override
-    public Optional<Payment> findByProviderPaymentId(String providerPaymentId) {
-        if (providerPaymentId == null) return Optional.empty();
-        return store.values().stream()
-                .filter(p -> providerPaymentId.equals(p.providerPaymentId()))
-                .findFirst();
+    public Optional<Payment> findByBookingReference(String bookingReference) {
+        return Optional.ofNullable(byBooking.get(bookingReference));
     }
 
     @Override
-    public List<Payment> findByBookingReference(String bookingReference) {
-        return store.values().stream()
-                .filter(p -> bookingReference.equals(p.bookingReference()))
-                .sorted((a, b) -> b.createdAt().compareTo(a.createdAt()))
-                .toList();
+    public Optional<Payment> findByIdempotencyKey(String idempotencyKey) {
+        return Optional.ofNullable(byIdempotencyKey.get(idempotencyKey));
     }
 
     @Override
     public List<Payment> findAll() {
-        return new ArrayList<>(store.values());
+        return List.copyOf(byId.values());
     }
 
     @Override
-    public Payment save(Payment payment) {
-        store.put(payment.paymentId(), payment);
+    public synchronized Payment save(Payment payment) {
+        byId.put(payment.id(), payment);
+        byBooking.put(payment.bookingReference(), payment);
+        if (payment.idempotencyKey() != null && !payment.idempotencyKey().isBlank()) {
+            byIdempotencyKey.put(payment.idempotencyKey(), payment);
+        }
         return payment;
     }
 }
