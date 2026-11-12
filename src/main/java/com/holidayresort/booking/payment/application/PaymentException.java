@@ -5,18 +5,19 @@ public class PaymentException extends RuntimeException {
     public enum Kind { INVALID, CONFLICT, NOT_FOUND, PROVIDER_ERROR }
 
     private final Kind kind;
+    private final String field;
 
-    public PaymentException(Kind kind, String message) {
+    public PaymentException(Kind kind, String field, String message) {
         super(message);
         this.kind = kind;
-    }
-
-    public PaymentException(Kind kind, String message, Throwable cause) {
-        super(message, cause);
-        this.kind = kind;
+        this.field = field;
     }
 
     public Kind kind() {
         return kind;
+    }
+
+    public String field() {
+        return field;
     }
 }
