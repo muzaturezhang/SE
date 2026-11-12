@@ -3,42 +3,38 @@ package com.holidayresort.booking.payment.domain;
 import java.time.LocalDateTime;
 
 /**
- * A payment record linked to a booking. Amount is in CNY minor units (fen).
- * providerPaymentId is returned by the payment gateway after successful init.
+ * One payment attempt for a booking. Amount is CNY integer minor units.
+ *
+ * <p>idempotencyKey ensures that retried initiation does not create two
+ * payments for the same booking. providerReference is the external transaction id.
  */
 public record Payment(
-        String paymentId,
+        String id,
         String bookingReference,
+        String idempotencyKey,
         long amountMinor,
         PaymentStatus status,
-        String provider,
-        String providerPaymentId,
+        String providerReference,
+        String failureReason,
         LocalDateTime createdAt,
         LocalDateTime paidAt) {
 
     public Payment {
-        if (paymentId == null || paymentId.isBlank()) {
+        if (id == null || id.isBlank()) {
             throw new IllegalArgumentException("Payment id is required");
         }
         if (bookingReference == null || bookingReference.isBlank()) {
             throw new IllegalArgumentException("Booking reference is required");
         }
         if (amountMinor <= 0) {
-            throw new IllegalArgumentException("Amount must be positive");
-        }
-        if (provider == null || provider.isBlank()) {
-            throw new IllegalArgumentException("Provider is required");
+            throw new IllegalArgumentException("Payment amount must be positive");
         }
     }
 
-    public Payment withStatus(PaymentStatus newStatus) {
-        return new Payment(paymentId, bookingReference, amountMinor, newStatus,
-                provider, providerPaymentId, createdAt,
-                newStatus == PaymentStatus.SUCCEEDED ? LocalDateTime.now() : paidAt);
-    }
-
-    public Payment withProviderPaymentId(String externalId) {
-        return new Payment(paymentId, bookingReference, amountMinor, status,
-                provider, externalId, createdAt, paidAt);
+    public Payment withStatus(PaymentStatus newStatus, String providerReference, String failureReason) {
+        return new Payment(id, bookingReference, idempotencyKey, amountMinor,
+                newStatus, providerReference != null ? providerReference : this.providerReference,
+                failureReason, createdAt,
+                newStatus == PaymentStatus.PAID ? LocalDateTime.now() : this.paidAt);
     }
 }
