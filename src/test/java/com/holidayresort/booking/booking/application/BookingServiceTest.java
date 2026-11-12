@@ -9,7 +9,6 @@ import com.holidayresort.booking.booking.domain.Booking;
 import com.holidayresort.booking.booking.domain.BookingStatus;
 import com.holidayresort.booking.booking.infrastructure.InMemoryBookingRepository;
 import com.holidayresort.booking.config.BookingProperties;
-import com.holidayresort.booking.member.application.DiscountResult;
 import com.holidayresort.booking.member.application.MembershipService;
 import com.holidayresort.booking.member.domain.Customer;
 import com.holidayresort.booking.member.infrastructure.InMemoryMemberRepository;
@@ -18,10 +17,8 @@ import com.holidayresort.booking.room.application.DefaultRoomQueryService;
 import com.holidayresort.booking.room.application.RoomQueryService;
 import com.holidayresort.booking.room.application.port.RoomInventoryEditor;
 import com.holidayresort.booking.room.domain.Room;
-import com.holidayresort.booking.room.domain.RoomBlock;
 import com.holidayresort.booking.room.domain.RoomInventory;
 import com.holidayresort.booking.room.domain.RoomType;
-import com.holidayresort.booking.room.domain.StayPeriod;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -80,7 +77,6 @@ class BookingServiceTest {
         BookingService.Quote q = service.quote(customer.id(), "courtyard",
                 LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 17), 1);
         assertThat(q.price().discountPercent()).isEqualTo(5);
-        // 196000 - 5% = 186200
         assertThat(q.price().totalMinor()).isEqualTo(186200);
     }
 
@@ -95,10 +91,8 @@ class BookingServiceTest {
         assertThat(b.price().totalMinor()).isEqualTo(196000);
         assertThat(b.paymentDeadline()).isAfter(b.createdAt());
 
-        // Rooms should now be locked: query again should show fewer available
         var result = roomQuery.search(new com.holidayresort.booking.room.application.RoomSearchQuery(
                 LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 17), 1, "courtyard"));
-        // 2 courtyard rooms total, 1 locked -> 1 available
         assertThat(result.options().get(0).availableRooms()).isEqualTo(1);
     }
 
@@ -116,7 +110,6 @@ class BookingServiceTest {
 
     @Test
     void createBookingFailsWhenNotEnoughRooms() {
-        // Take both courtyard rooms
         service.createBooking(customer.id(), "courtyard",
                 LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 17), 2,
                 "Zhang San", "zhang@example.com", "idem-003");
@@ -132,7 +125,6 @@ class BookingServiceTest {
         Booking b = service.createBooking(customer.id(), "courtyard",
                 LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 17), 1,
                 "Zhang San", "zhang@example.com", "idem-005");
-        // Advance clock past deadline
         Clock expiredClock = Clock.fixed(Instant.parse("2026-11-11T04:20:00Z"),
                 ZoneId.of("Asia/Shanghai"));
         BookingService expiredService = new BookingService(bookings, roomQuery, inventory,
@@ -143,14 +135,13 @@ class BookingServiceTest {
         assertThat(after.status()).isEqualTo(BookingStatus.EXPIRED);
     }
 
-    /** Test double: holds a RoomInventory and implements both read and write ports. */
     private static class TestInventoryEditor implements RoomInventoryEditor {
         private RoomInventory inventory;
 
         TestInventoryEditor() {
-            RoomType courtyard = new RoomType("courtyard", "庭院客房", "Courtyard Room",
+            RoomType courtyard = new RoomType("courtyard", "Courtyard Room", "Courtyard Room",
                     "Quiet courtyard room", "/img/courtyard.jpg", "Courtyard", List.of("wifi"), 98000);
-            RoomType terrace = new RoomType("terrace", "露台套房", "Terrace Suite",
+            RoomType terrace = new RoomType("terrace", "Terrace Suite", "Terrace Suite",
                     "With terrace", "/img/terrace.jpg", "Terrace", List.of("wifi", "bath"), 168000);
             List<Room> rooms = List.of(
                     new Room("C101", "courtyard", true),
