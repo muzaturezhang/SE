@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('账户登录')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('account')}"></header>
+<nav th:replace="~{fragments/layout :: memberNav('')}"></nav>
+<main id="main-content" tabindex="-1" class="account-main">
+  <p class="admin-success" role="status" th:if="${accountMessage}" th:text="${accountMessage}"></p>
+  <div class="account-auth-grid">
+    <section class="account-introduction"><p class="section-label">A PLACE TO RETURN TO</p><h1>欢迎回来</h1><p>查看您的个人资料、会员状态，为下一段假期留出时间。</p><img th:src="@{/images/coastal-retreat.jpg}" alt="露台与绿植环绕的度假居所" width="1400" height="996"><p class="account-photo-caption">Holiday Resort · 海岸度假居所</p></section>
+    <section class="account-auth-panel" aria-labelledby="login-title"><p class="section-label">YOUR ACCOUNT</p><h2 id="login-title">账户登录</h2><p class="account-form-lead">登录后查看个人资料、会员状态与预订安排。工作人员使用同一入口登录管理后台。</p>
+      <p class="admin-errors" role="alert" th:if="${param.error != null}">邮箱或密码不正确，请重新输入。</p>
+      <form th:action="@{/account/login}" method="post" class="account-form" autocomplete="off">
+        <div class="admin-field"><label for="username">邮箱</label><input type="email" id="username" name="username" maxlength="254" required autocomplete="username"></div>
+        <div class="admin-field"><label for="password">密码</label><input type="password" id="password" name="password" maxlength="72" required autocomplete="current-password"></div>
+        <button class="solid-button" type="submit">登录 <span aria-hidden="true">→</span></button>
+      </form>
+      <p class="account-switch">还没有账户？<a th:href="@{/account/register}">注册新账户 ↗</a></p>
+    </section>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

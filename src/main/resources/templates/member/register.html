@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('账户注册')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('account')}"></header>
+<nav th:replace="~{fragments/layout :: memberNav('')}"></nav>
+<main id="main-content" tabindex="-1" class="account-main">
+  <div class="account-auth-grid">
+    <section class="account-introduction"><p class="section-label">BEGIN YOUR NEXT CHAPTER</p><h1>开启下一段假期</h1><p>创建账户后即可预订住宿、查看订单与开通会员。</p><img th:src="@{/images/suite-interior.jpg}" alt="暖色木饰与柔软床品的度假客房" width="1400" height="996"><p class="account-photo-caption">Holiday Resort · 安静的度假时光</p></section>
+    <section class="account-auth-panel" aria-labelledby="register-title"><p class="section-label">CREATE YOUR ACCOUNT</p><h2 id="register-title">账户注册</h2><p class="account-form-lead">密码至少 8 个字符、最多 72 个字符，需同时包含字母和数字。</p>
+      <div th:replace="~{fragments/layout :: accountErrors}"></div>
+      <form th:action="@{/account/register}" th:object="${registerForm}" method="post" class="account-form" autocomplete="off">
+        <div class="admin-field"><label for="displayName">姓名</label><input type="text" th:field="*{displayName}" maxlength="80" required autocomplete="off"></div>
+        <div class="admin-field"><label for="email">邮箱</label><input type="email" th:field="*{email}" maxlength="254" required autocomplete="off"></div>
+        <div class="admin-field"><label for="password">密码</label><input type="password" id="password" name="password" maxlength="72" minlength="8" required autocomplete="new-password" aria-describedby="password-help"><p id="password-help">至少 8 个字符且同时包含字母和数字，不以空格开头或结尾。</p></div>
+        <div class="admin-field"><label for="confirmPassword">再次输入密码</label><input type="password" id="confirmPassword" name="confirmPassword" maxlength="72" minlength="8" required autocomplete="new-password"></div>
+        <button class="solid-button" type="submit">创建账户 <span aria-hidden="true">→</span></button>
+      </form>
+      <p class="account-switch">已有账户？<a th:href="@{/account/login}">返回登录页面 ↗</a></p>
+    </section>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

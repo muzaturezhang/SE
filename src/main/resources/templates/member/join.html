@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('会员开通与续费')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('account')}"></header>
+<nav th:replace="~{fragments/layout :: memberNav('membership')}"></nav>
+<main id="main-content" tabindex="-1" class="account-main">
+  <a class="text-link stay-back" th:href="@{/account/membership}">← 返回会员页面</a>
+  <div class="account-page-heading"><p class="section-label">MEMBERSHIP ARRANGEMENT</p><h1 th:text="${intent == 'renew'} ? '会员续费页面' : '会员开通页面'"></h1><p>在这里确认会员方案，记录申请后再进入支付流程。</p></div>
+  <div class="account-membership-grid">
+    <section class="account-member-state"><h2>方案与费用</h2><dl class="stay-facts"><div><dt>操作类型</dt><dd th:text="${intent == 'renew'} ? '会员续费' : '会员开通'"></dd></div><div><dt>会员费</dt><dd class="stay-total" th:text="${feeLabel}"></dd></div><div><dt>会员有效期</dt><dd th:text="'支付确认之日起 ' + ${plan.durationDays} + ' 天'"></dd></div><div><dt>住宿优惠</dt><dd th:text="'会员住宿 ' + (100 - ${plan.discountPercent}) + ' 折'"></dd></div></dl><div class="payment-integration-note" id="membership-payment-help"><h3>支付服务待接入</h3><p>本页只记录会员申请，不收取费用。支付由预订/支付服务完成后，会员资格自动生效。</p></div>
+      <form th:action="@{/account/membership/join}" method="post"><input type="hidden" name="intent" th:value="${intent}"><button class="solid-button" type="submit">记录开通申请 <span aria-hidden="true">→</span></button></form>
+    </section>
+    <img class="account-membership-photo" th:src="@{/images/coastal-retreat.jpg}" alt="绿植环绕的安静度假露台" width="1400" height="996">
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

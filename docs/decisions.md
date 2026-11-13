@@ -77,3 +77,14 @@ staff-booking-ui独立可选，dev-ui.sh显式启用；默认与dev-staff.sh默�
 - `booking_room_night(room_id, stay_date)` 主键在 DB 层保证同一房间不能重复占用同一夜，避免依赖 MySQL 专有 exclusion constraint。
 - 锁表使用 `ROOM_INVENTORY → BOOKING → PAYMENT` 固定顺序；B 的 JDBC Room adapter 已接入，C/A 的事务必须复用该入口。
 - A/C repository 端口未冻结前不代写其领域服务或 adapter。D 只提供 schema、锁、通知与 Room 持久化实现。
+
+## 2026-11-01：A 成员与认证实现选择
+
+- 一个共享登录页 /account/login 同时服务 CUSTOMER 与 STAFF，登录成功后按角色跳转（STAFF → /admin/rooms，CUSTOMER → 保存请求或 /account）；失败统一回登录页。B 的 local-staff 预览由独立前置安全链保持 /staff-preview/login 原行为。
+- 统一 PasswordEncoder 为 BCrypt；存储值不带 {id} 前缀；删除原 InMemoryUserDetailsManager，全部身份经 ResortUserDetailsService（先 STAFF 目录、后按邮箱查顾客）。
+- 密码策略：8–72 字符、含字母和数字、不以空格开头或结尾；256 字符预览上限不代表生产策略，生产策略以本基线为准。
+- 邮箱作为登录标识，去空白、统一小写、忽略大小写唯一；principal 名用内部顾客 ID，避免 UI 传入身份。
+- 会员基线：会员费 CNY 680.00（68000 分）、住宿 95 折、自支付确认日 365 天；由 A 提议，待全组确认后冻结。会员费独立计价，不套住宿折扣；折扣最终由 C 应用并保留价格快照。
+- STAFF 不提供公开注册；开发环境经 env（LOCAL_STAFF_*）预置，生产预置方式待团队确认。
+- 匿名访问除 /account/** 外的受保护或未知路径保持 403，不跳到登录页，以维持既有基础测试语义；/account/** 匿名访问跳登录页。
+- member 内存适配与 Room 相同仅在 `!mysql & (dev | test)` 提供；D 的 MySQL 适配、唯一约束与历史保留到位后替换。

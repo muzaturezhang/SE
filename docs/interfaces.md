@@ -68,6 +68,46 @@ record RoomInventory(List<RoomType> roomTypes, List<Room> rooms,
 
 接口新增或变更时记录：日期、owner、输入、输出、错误、事务、状态、受影响模块、评审结果。Mock 不能自行冻结这些业务约定。
 
+## 2026-11-01：A 身份与会员服务契约草案
+
+Owner：A；评审人 B（页面接入）、C（最终计价与会员付款）、D（持久化与约束）。以下已随第一批实现落地，仍待团队逐项评审后才能冻结为共享基线；是对 B 交接清单 R01/R04 的初答。
+
+```java
+interface RegistrationService {
+    Customer register(String displayName, String email, String password);
+}
+interface MembershipService {
+    MembershipPlan planFor(String customerId);
+    Optional<Membership> statusFor(String customerId);
+    DiscountResult discountFor(String customerId);
+    Membership requestApplication(String customerId);
+    Membership confirmPayment(String customerId, LocalDate paidOn);
+}
+record DiscountResult(boolean active, int discountPercent, String label) {}
+record MembershipPlan(long feeMinor, int discountPercent, int durationDays) {}
+record Customer(String id, String displayName, String email, String passwordHash, LocalDate registeredOn) {}
+record Membership(String customerId, boolean paymentConfirmed, long feeMinor,
+                  int discountPercent, LocalDate startDate, LocalDate endDate) {}
+```
+
+- 邮箱是登录标识，去空白、统一小写、唯一（忽略大小写）；认证成功后 principal 名是内部顾客 ID，页面/后续服务不得接收请求传入的身份。
+- 密码策略：8–72 字符、同时含字母和数字、不能以空格开头或结尾；BCrypt 哈希；密码不进日志、Session、flash 或错误回显。
+- 会员基线：会员费 68000 分、住宿折扣 5%、有效期 365 天。折扣比例与费用由 A 提议，全组确认前不冻结；最终金额由 C 计算，整笔房费一次性四舍五入到分。
+- `confirmPayment` 由 C 在支付核对成功后调用，幂等；申请在确认前保持 PENDING，无生效日期。
+- 错误统一为 `MemberAccountException(INVALID 400 / CONFLICT 409 / NOT_FOUND 404)`，带 field 与可读消息。
+
+| HTTP | 行为 |
+| --- | --- |
+| GET /account/login | 登录页；?error 显示统一失败提示；STAFF 与 CUSTOMER 共用 |
+| POST /account/login | Spring Security 登录处理；成功后 STAFF → /admin/rooms，CUSTOMER → 保存请求或 /account |
+| GET/POST /account/register | 注册表单；成功 302 到登录页，重复邮箱 409，非法输入 400 |
+| GET /account | 本人资料与会员摘要，要求 CUSTOMER |
+| GET /account/membership | 会员状态、费用、折扣与有效期，要求 CUSTOMER |
+| GET/POST /account/membership/join?intent=join或renew | 查看方案与记录申请；POST 需 CSRF，成功后会员保持待确认 |
+| POST /logout | 清除 Session 后回到 /rooms |
+
+R01（主体/路由/登录退出/密码策略）初答如上；正式客户路由即 /account/**，preview 路由不接真实数据。R04（会员结果/报价/折扣字段）初答为 DiscountResult 与 Membership 字段，价格快照仍归 C。R02/R03/R05–R07 待 B/C/D 共同评审。B 的 local-staff 预览继续由 /staff-preview/login 处理，行为不变。member 的内存适配与 Room 相同仅在 `!mysql & (dev | test)` 提供，D 的 MySQL 适配与唯一约束到位后替换。
+
 ## 2026-10-28：B 管理写契约草案
 
 Owner：B；评审人：A（身份）、C（有效占用/价格快照）、D（持久化、锁与唯一约束）。原 RoomRepository 只读方法不变，以保留查询调用方与测试的兼容性。

@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('账户页面无法显示')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('account')}"></header>
+<nav th:replace="~{fragments/layout :: memberNav('')}"></nav>
+<main id="main-content" tabindex="-1" class="account-main">
+  <div class="account-result"><p class="section-label">ACCOUNT NOTICE</p><h1>账户页面暂时无法显示</h1><p class="admin-errors" role="alert" th:text="${memberError}"></p><p>您可以返回登录页面重试，或回到度假村首页。</p><div class="account-entry-actions"><a class="outline-button" th:href="@{/account/login}">返回登录页面</a><a class="text-link" th:href="@{/}">回到度假村首页 ↗</a></div></div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>
