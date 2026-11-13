@@ -1,6 +1,6 @@
 # Holiday Resort Booking System
 
-团队共享的 Web 工程。当前提供 Spring Boot 骨架、安缦参考方向的客户界面，以及 B 的房型浏览、可用性查询、STAFF 房间管理和可选的预订流程、账户与会员 UI 演示。房型、基础价、日期占用与可用数量默认来自内存样例数据；D 已补齐版本化持久化 schema、Room 的 MySQL/H2 JDBC 适配、一天前提醒、取消/改期重排、SMTP 端口、统一锁顺序与 CI/JaCoCo 验证。A/C 的真实认证、预订与支付业务服务仍未接入。
+团队共享的 Web 工程。当前提供 Spring Boot 骨架、安缦参考方向的客户界面，以及 B 的房型浏览、可用性查询、STAFF 房间管理和可选的预订流程、账户与会员 UI 演示。房型、基础价、日期占用与可用数量默认来自内存样例数据；D 已补齐版本化持久化 schema、Room 的 MySQL/H2 JDBC 适配、一天前提醒、取消/改期重排、SMTP 端口、统一锁顺序与 CI/JaCoCo 验证。A/C 的认证、Booking/Payment 服务已进入共享代码；D 已补齐 H2/MySQL JDBC adapter、事务边界和 Booking→Reminder 联动。B 的若干页面仍保留独立 preview 路由，最终 UI 联调需以真实服务为准。
 
 查询支持日期、房型和房间数量，并在后端校验输入、计算整个住期连续可用的房间。快速演示见 [房间查询与样例场景](docs/room-query-demo.md)。
 
@@ -14,13 +14,13 @@
 
 2026-11-07，D 在 `notification` 与 `persistence` 包完成以下内部开发基线：
 
-- Flyway `V1`–`V7`：提醒、房型/房间/占用、客户/员工/会员、预订/支付、审计历史、统一锁表与房型种子数据。
+- Flyway `V1`–`V8`：提醒、房型/房间/占用、客户/员工/会员、预订/支付、审计历史、统一锁表、房型种子数据及 booking/payment/membership 对齐。
 - `NotificationService`：上海时区一天前提醒、09:00 发送时间、取消、改期自动重排、有界重试、版本化认领、隐私安全错误码。
 - `EmailTransport`：默认 `MockEmailTransport`；可选 `smtp-email` profile 使用环境变量配置的 SMTP，不在源码保存凭据。
-- Room 持久化：`JdbcRoomInventoryRepository` 以事务和统一锁序实现 B 的原子 `RoomInventoryEditor` 契约。
+- JDBC 持久化：Room、Member、Membership、Staff、Booking、Payment 和 Reminder adapter；Booking 使用独立 `BookingInventoryPort`，避免把预订占用混入 B 的 staff room management 端口。
 - 测试基础设施：H2 全新 schema、Flyway 约束测试、JUnit/JaCoCo、覆盖率门槛、Windows/Linux 入口和 GitHub Actions。
 
-详细边界、联调调用和未验证项见 [D 通知与持久化实现](docs/d-persistence-notification-foundation.md)。默认启动仍使用内存 Room 与 Mock 邮件；MySQL 和真实 SMTP 需要显式 profile 与环境配置。
+详细边界、联调调用和未验证项见 [D 通知与持久化实现](docs/d-persistence-notification-foundation.md)。默认 `dev`/`test` 保留内存业务 adapter；`mysql` profile 使用 JDBC adapter，真实 SMTP 需要显式 `smtp-email` profile 与环境配置。
 ## 快速启动
 
 需要 JDK 17 或更新版本；项目编译目标为 Java 17。首次运行需要联网下载 Maven 和依赖，不需要另外安装 Maven。
@@ -53,7 +53,7 @@ Windows PowerShell：
 
 打开 <http://localhost:8080/admin/rooms>，用户名为 `localstaff`，随机密码保存在本机 `.cache/staff-preview/password.txt`（不会提交 Git）。此脚本仅在本机 `dev,local-staff` 启用临时 STAFF 身份；默认 `dev.sh` 不提供账号。支持新增、修改、停用、重新启用、房型基础价维护和房型/状态筛选。
 
-默认 `dev` 的所有修改在内存中，重启恢复初始样例；D 的 `mysql` profile 已提供事务化 Room JDBC 适配和版本化 schema。正式登录、Booking/Payment adapter 仍由 A/C 与 D 在端口评审后接入。操作步骤见 [管理演示](docs/room-management-demo.md)。
+默认 `dev` 的所有修改在内存中，重启恢复初始样例；D 的 `mysql` profile 已提供事务化 Room JDBC 适配和版本化 schema。正式登录与 Booking/Payment JDBC adapter 已接入共享代码，B 的 preview 路由仍不等于真实页面验收。操作步骤见 [管理演示](docs/room-management-demo.md)。
 
 ## 独立预览预订流程 UI
 
@@ -81,7 +81,7 @@ Windows PowerShell：
 
 启动后打开 <http://localhost:8080/account/register> 可注册真实账户；`/account/login` 登录后进入个人中心 `/account` 与会员页 `/account/membership`。STAFF 与 CUSTOMER 共用同一登录页，登录后按角色跳转。
 
-密码以 BCrypt 存储，要求 8–72 个字符且同时包含字母和数字；邮箱大小写不敏感且唯一。会员基线为 CNY 680.00、住宿 95 折、自支付确认日起 365 天；开通申请保持待确认，待支付服务（C）核对后生效。开发环境数据在内存中，重启恢复；MySQL 持久化由 D 接入。需求与契约见 [Member 与账户需求](docs/requirements/member-account.md) 与 [接口登记](docs/interfaces.md)。
+密码以 BCrypt 存储，要求 8–72 个字符且同时包含字母和数字；邮箱大小写不敏感且唯一。会员基线为 CNY 680.00、住宿 95 折、自支付确认日起 365 天；开通申请保持待确认，待支付服务（C）核对后生效。开发环境默认使用内存 adapter，重启恢复；`mysql` profile 已由 D 接入 Customer/Membership/Staff JDBC adapter 与审计表。需求与契约见 [Member 与账户需求](docs/requirements/member-account.md) 与 [接口登记](docs/interfaces.md)。
 
 ## 检查与打包
 
@@ -96,7 +96,7 @@ Windows PowerShell：
 java -jar target/holiday-resort-booking-0.1.0-SNAPSHOT.jar
 ```
 
-测试覆盖基础设施、安全边界、日期区间、Room 查询、管理写操作、原子更新、本地预览登录、预订 UI 输入、会话隔离、只读支付示例、账户表单、站内返回白名单、会员展示、D 的提醒/重试/取消/重排、完整 schema 约束、统一锁和 Room JDBC 适配。当前完整验证为 245 项测试、0 失败、0 错误、0 跳过，JaCoCo 总行覆盖率 91.59%。实际执行结果见 [交接记录](handoff/CURRENT.md)。
+测试覆盖基础设施、安全边界、日期区间、Room 查询、管理写操作、原子更新、本地预览登录、预订 UI 输入、会话隔离、账户表单、站内返回白名单、会员展示、D 的提醒/重试/取消/重排、SENDING lease 恢复、完整 schema 约束、统一锁、Booking/Payment/Member/Staff JDBC adapter 及 Booking→Reminder 生命周期。当前本地验证为 290 项测试、0 失败、0 错误、1 项真实 MySQL 环境门禁 skip，JaCoCo 总行覆盖率 90.11%。实际执行结果见 [D 测试报告](docs/test/d-test-report.md) 与 [证据索引](docs/evidence-index.md)。
 
 ## 目录
 

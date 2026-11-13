@@ -32,9 +32,15 @@ public record Payment(
     }
 
     public Payment withStatus(PaymentStatus newStatus, String providerReference, String failureReason) {
+        return withStatus(newStatus, providerReference, failureReason,
+                newStatus == PaymentStatus.PAID ? LocalDateTime.now() : paidAt);
+    }
+
+    public Payment withStatus(PaymentStatus newStatus, String providerReference,
+            String failureReason, LocalDateTime paidAt) {
         return new Payment(id, bookingReference, idempotencyKey, amountMinor,
                 newStatus, providerReference != null ? providerReference : this.providerReference,
                 failureReason, createdAt,
-                newStatus == PaymentStatus.PAID ? LocalDateTime.now() : this.paidAt);
+                newStatus == PaymentStatus.PAID ? paidAt : this.paidAt);
     }
 }

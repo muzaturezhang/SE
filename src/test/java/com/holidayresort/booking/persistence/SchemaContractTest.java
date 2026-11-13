@@ -33,7 +33,8 @@ class SchemaContractTest {
                 "ROOM_TYPE", "ROOM", "ROOM_BLOCK", "CUSTOMER", "MEMBERSHIP",
                 "BOOKING", "BOOKING_ROOM_ALLOCATION", "BOOKING_ROOM_NIGHT",
                 "PAYMENT", "PAYMENT_EVENT", "REMINDER_SCHEDULE", "REMINDER_EVENT",
-                "PERSISTENCE_LOCK", "ROOM_CHANGE_EVENT", "ROOM_TYPE_RATE_EVENT");
+                "PERSISTENCE_LOCK", "ROOM_CHANGE_EVENT", "ROOM_TYPE_RATE_EVENT",
+                "BOOKING_ROOM_NIGHT_HISTORY", "BOOKING_EVENT", "MEMBERSHIP_EVENT");
         assertThat(jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM room_type", Integer.class)).isEqualTo(3);
         assertThat(jdbcTemplate.queryForObject(

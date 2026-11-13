@@ -31,7 +31,7 @@ class ReminderServiceTest {
     private static final ZoneId ZONE = ZoneId.of("Asia/Shanghai");
     private static final LocalDate TODAY = LocalDate.now(Clock.fixed(NOW, ZONE));
     private static final NotificationProperties PROPERTIES =
-            new NotificationProperties(false, 50, 3, Duration.ofMinutes(15), 60_000, 9,
+            new NotificationProperties(false, 50, 3, Duration.ofMinutes(15), Duration.ofMinutes(5), 60_000, 9,
                     "no-reply@example.invalid");
 
     @Test

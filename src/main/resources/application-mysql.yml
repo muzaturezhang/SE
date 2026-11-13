@@ -5,3 +5,6 @@ spring:
     password: ${MYSQL_PASSWORD}
     hikari:
       maximum-pool-size: 5
+
+payment:
+  provider: ${PAYMENT_PROVIDER:sandbox-payment}

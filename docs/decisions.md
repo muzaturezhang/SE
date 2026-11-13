@@ -88,3 +88,12 @@ staff-booking-ui独立可选，dev-ui.sh显式启用；默认与dev-staff.sh默�
 - STAFF 不提供公开注册；开发环境经 env（LOCAL_STAFF_*）预置，生产预置方式待团队确认。
 - 匿名访问除 /account/** 外的受保护或未知路径保持 403，不跳到登录页，以维持既有基础测试语义；/account/** 匿名访问跳登录页。
 - member 内存适配与 Room 相同仅在 `!mysql & (dev | test)` 提供；D 的 MySQL 适配、唯一约束与历史保留到位后替换。
+
+## 2026-11-13：D 集成决策
+
+- Booking allocation 使用独立 `BookingInventoryPort`，不复用 B 的 `RoomInventoryEditor`。原因是 B/JDBC adapter 明确拒绝修改 booking-owned blocks，复用会把两种职责和事务边界混在一起。
+- `booking_room_night` 作为 active occupancy 投影；释放时先写 `booking_room_night_history`，再删除 active 行。这样既保持数据库级重叠约束，又保留释放证据并允许房间再次销售。
+- `BookingService` 创建 booking 时发布生命周期事件；D 的 listener 在同一个事务内写入 reminder outbox，避免 commit 后崩溃导致提醒丢失。
+- V1–V7 已作为迁移 checksum 基线保留；新增字段和审计表放入 V8，不重写旧迁移。
+- `mysql` profile 使用 JDBC adapter；`dev`/`test` 保留内存 adapter。SandboxPaymentProvider 只用于非生产/CI，真实 provider 仍需后续接入。
+- JaCoCo 90% 总行门槛保留；测试报告同时列出实际分支覆盖率和 environment-gated skip，避免只看总行数字。

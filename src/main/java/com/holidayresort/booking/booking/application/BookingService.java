@@ -1,6 +1,7 @@
 package com.holidayresort.booking.booking.application;
 
 import com.holidayresort.booking.booking.application.BookingException.Kind;
+import com.holidayresort.booking.booking.application.port.BookingInventoryPort;
 import com.holidayresort.booking.booking.application.port.BookingRepository;
 import com.holidayresort.booking.booking.domain.Booking;
 import com.holidayresort.booking.booking.domain.BookingStatus;
@@ -11,51 +12,54 @@ import com.holidayresort.booking.member.application.MembershipService;
 import com.holidayresort.booking.room.application.RoomQueryService;
 import com.holidayresort.booking.room.application.RoomSearchQuery;
 import com.holidayresort.booking.room.application.RoomSearchResult;
-import com.holidayresort.booking.room.application.port.RoomInventoryEditor;
-import com.holidayresort.booking.room.domain.Room;
-import com.holidayresort.booking.room.domain.RoomBlock;
-import com.holidayresort.booking.room.domain.RoomInventory;
 import com.holidayresort.booking.room.domain.RoomType;
 import com.holidayresort.booking.room.domain.StayPeriod;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * C-owned booking lifecycle: quoting, creation with inventory hold, idempotency,
  * expiry release and price snapshots.
  *
- * <p>Lock order: room inventory -> booking. The RoomInventoryEditor.updateSnapshot
- * callback is the single atomic boundary for allocating and releasing rooms.
+ * <p>The inventory port owns the atomic allocation boundary. D implements it
+ * with the shared room-inventory -> booking lock order, while dev/test use an
+ * in-memory implementation.
  */
 @Service
 public class BookingService {
 
     private final BookingRepository bookings;
     private final RoomQueryService roomQuery;
-    private final RoomInventoryEditor roomInventory;
+    private final BookingInventoryPort inventory;
     private final MembershipService memberships;
     private final BookingProperties properties;
     private final Clock clock;
-    private final AtomicInteger sequence = new AtomicInteger(1);
+    private final ApplicationEventPublisher events;
 
+    /**
+     * Compatibility constructor retained for focused C tests and callers that
+     * still supply B's room inventory editor directly.
+     */
     public BookingService(BookingRepository bookings,
-                         RoomQueryService roomQuery,
-                         RoomInventoryEditor roomInventory,
-                         MembershipService memberships,
-                         BookingProperties properties,
-                         Clock clock) {
+                          RoomQueryService roomQuery,
+                          BookingInventoryPort inventory,
+                          MembershipService memberships,
+                          BookingProperties properties,
+                          Clock clock,
+                          ApplicationEventPublisher events) {
         this.bookings = bookings;
         this.roomQuery = roomQuery;
-        this.roomInventory = roomInventory;
+        this.inventory = inventory;
         this.memberships = memberships;
         this.properties = properties;
         this.clock = clock;
+        this.events = events;
     }
 
     /** Quote a stay: check availability, apply member discount, return frozen prices. */
@@ -79,58 +83,45 @@ public class BookingService {
     /**
      * Create a booking atomically: re-check availability inside the inventory
      * write boundary, allocate physical rooms, freeze the price, and hold for
-     * the configured number of minutes. Idempotent by idempotencyKey.
+     * the configured minutes. A client retry with the same key returns the
+     * original booking.
      */
+    @Transactional
     public Booking createBooking(String customerId, String roomTypeId,
                                  LocalDate arrival, LocalDate departure, int roomCount,
                                  String guestName, String guestEmail, String idempotencyKey) {
-        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
-            var existing = bookings.findByIdempotencyKey(idempotencyKey);
+        String normalizedKey = idempotencyKey == null || idempotencyKey.isBlank()
+                ? null : idempotencyKey.strip();
+        if (normalizedKey != null) {
+            var existing = bookings.findByIdempotencyKey(normalizedKey);
             if (existing.isPresent()) {
                 return existing.get();
             }
         }
+
         StayPeriod stay = new StayPeriod(arrival, departure);
         DiscountResult discount = memberships.discountFor(customerId);
-
-        List<String> allocated = new ArrayList<>();
-        PriceSnapshot[] heldPrice = new PriceSnapshot[1];
-        roomInventory.updateSnapshot(inv -> {
-            List<String> availableRooms = new ArrayList<>();
-            for (Room room : inv.rooms()) {
-                if (!room.roomTypeId().equals(roomTypeId) || !room.enabled()) continue;
-                boolean overlaps = false;
-                for (RoomBlock block : inv.blocks()) {
-                    if (block.roomId().equals(room.id()) && block.period().overlaps(stay)) {
-                        overlaps = true; break;
-                    }
-                }
-                if (!overlaps) availableRooms.add(room.id());
-            }
-            if (availableRooms.size() < roomCount) {
-                throw new BookingException(Kind.CONFLICT, "rooms",
-                        "Not enough rooms available for the selected dates. Please adjust your stay.");
-            }
-            List<String> picked = availableRooms.subList(0, roomCount);
-            allocated.addAll(picked);
-            RoomType type = inv.roomTypes().stream()
-                    .filter(t -> t.id().equals(roomTypeId)).findFirst().orElseThrow();
-            heldPrice[0] = PriceSnapshot.of(type.nightlyRateMinor(), stay.nights(), roomCount,
-                    discount.active() ? discount.discountPercent() : 0);
-            List<RoomBlock> newBlocks = new ArrayList<>(inv.blocks());
-            for (String roomId : picked) {
-                newBlocks.add(new RoomBlock(roomId, stay));
-            }
-            return new RoomInventory(inv.roomTypes(), inv.rooms(), newBlocks);
-        });
-
         LocalDateTime now = LocalDateTime.now(clock);
         LocalDateTime deadline = now.plusMinutes(properties.bookingHoldMinutes());
-        String reference = "BOOK-" + String.format("%06d", sequence.getAndIncrement());
-        Booking booking = new Booking(reference, idempotencyKey, customerId,
-                guestName.strip(), guestEmail.strip(), roomTypeId, stay, roomCount,
-                allocated, heldPrice[0], BookingStatus.PENDING, now, deadline);
-        return bookings.save(booking);
+        String reference = "BOOK-" + UUID.randomUUID().toString().replace("-", "")
+                .substring(0, 12).toUpperCase();
+
+        Booking booking = inventory.allocate(roomTypeId, stay, roomCount, (type, roomIds) -> {
+            PriceSnapshot price = PriceSnapshot.of(type.nightlyRateMinor(), stay.nights(), roomCount,
+                    discount.active() ? discount.discountPercent() : 0);
+            return bookings.save(new Booking(reference, normalizedKey, customerId,
+                    guestName.strip(), guestEmail.strip(), roomTypeId, stay, roomCount,
+                    roomIds, price, BookingStatus.PENDING, now, deadline));
+        });
+
+        String roomTypeName = roomQuery.listRoomTypes().stream()
+                .filter(type -> type.id().equals(roomTypeId))
+                .map(RoomType::name)
+                .findFirst()
+                .orElse(roomTypeId);
+        events.publishEvent(new BookingLifecycleEvent(
+                BookingLifecycleEvent.Type.CREATED, booking, roomTypeName));
+        return booking;
     }
 
     public Booking findByReference(String reference) {
@@ -143,6 +134,7 @@ public class BookingService {
         return bookings.findByCustomerId(customerId);
     }
 
+    @Transactional
     public int releaseExpiredBookings() {
         LocalDateTime now = LocalDateTime.now(clock);
         List<Booking> pending = bookings.findAll().stream()
@@ -150,43 +142,56 @@ public class BookingService {
                 .filter(b -> b.paymentDeadline().isBefore(now))
                 .toList();
         for (Booking booking : pending) {
-            roomInventory.updateSnapshot(inv -> {
-                List<RoomBlock> kept = inv.blocks().stream()
-                        .filter(block -> !(booking.allocatedRoomIds().contains(block.roomId())
-                                && block.period().equals(booking.stay())))
-                        .toList();
-                return new RoomInventory(inv.roomTypes(), inv.rooms(), kept);
-            });
-            bookings.save(booking.withStatus(BookingStatus.EXPIRED));
+            inventory.release(booking, "HOLD_EXPIRED");
+            Booking expired = bookings.save(booking.withStatus(BookingStatus.EXPIRED));
+            events.publishEvent(new BookingLifecycleEvent(
+                    BookingLifecycleEvent.Type.STATUS_CHANGED, expired, null));
         }
         return pending.size();
     }
 
     /** Mark a booking as paid (called by PaymentService after successful payment). */
+    @Transactional
     public Booking markPaid(String reference) {
         Booking booking = findByReference(reference);
-        if (booking.status() == BookingStatus.PAID) return booking;
-        return bookings.save(booking.withStatus(BookingStatus.PAID));
+        if (booking.status() == BookingStatus.PAID) {
+            return booking;
+        }
+        if (booking.status().isTerminal()) {
+            throw new BookingException(Kind.CONFLICT, "status",
+                    "A failed or expired booking cannot be marked paid.");
+        }
+        Booking paid = bookings.save(booking.withStatus(BookingStatus.PAID));
+        events.publishEvent(new BookingLifecycleEvent(
+                BookingLifecycleEvent.Type.STATUS_CHANGED, paid, null));
+        return paid;
     }
 
     /** Mark a booking as failed and release its rooms (called by PaymentService). */
+    @Transactional
     public Booking markFailed(String reference) {
         Booking booking = findByReference(reference);
-        if (booking.status().isTerminal()) return booking;
-        roomInventory.updateSnapshot(inv -> {
-            List<RoomBlock> kept = inv.blocks().stream()
-                    .filter(block -> !(booking.allocatedRoomIds().contains(block.roomId())
-                            && block.period().equals(booking.stay())))
-                    .toList();
-            return new RoomInventory(inv.roomTypes(), inv.rooms(), kept);
-        });
-        return bookings.save(booking.withStatus(BookingStatus.FAILED));
+        if (booking.status().isTerminal()) {
+            return booking;
+        }
+        inventory.release(booking, "PAYMENT_FAILED");
+        Booking failed = bookings.save(booking.withStatus(BookingStatus.FAILED));
+        events.publishEvent(new BookingLifecycleEvent(
+                BookingLifecycleEvent.Type.STATUS_CHANGED, failed, null));
+        return failed;
     }
 
     /** Move a booking to under review when the payment result is unknown. */
+    @Transactional
     public Booking markUnderReview(String reference) {
         Booking booking = findByReference(reference);
-        return bookings.save(booking.withStatus(BookingStatus.UNDER_REVIEW));
+        if (booking.status().isTerminal()) {
+            return booking;
+        }
+        Booking underReview = bookings.save(booking.withStatus(BookingStatus.UNDER_REVIEW));
+        events.publishEvent(new BookingLifecycleEvent(
+                BookingLifecycleEvent.Type.STATUS_CHANGED, underReview, null));
+        return underReview;
     }
 
     /** Quote result projection for the UI. */

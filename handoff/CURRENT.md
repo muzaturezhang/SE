@@ -1,20 +1,22 @@
 # 当前交接
 
-更新时间：2026-11-07，Asia/Shanghai。B 的五批 Room/UI 本地实现与 D 的通知、持久化、MySQL/H2 schema、Room JDBC 适配、统一锁序和测试基础设施均已完成本地验证。真实身份、Booking/Payment 服务与会员规则仍未接入；MySQL 8 和真实 SMTP 尚未做外部实例验证。
+更新时间：2026-11-13，Asia/Shanghai。B 的 Room/UI、A 的账户/会员、C 的 Booking/Payment 与 D 的通知/持久化已在本地合并基线上可编译；D 已补齐 H2/MySQL JDBC adapter、BookingInventoryPort、Booking→Reminder 联动、V8 迁移、MySQL-mode 集成测试与 MySQL 8 CI service。真实 MySQL 8、真实 SMTP、GitHub Actions 远端结果和 Q5/Q7 用户测试仍不能由本地结果替代。
 
-## D 通知与持久化完整实现 2026-11-07
+## D 集成完成 2026-11-13
 
-用户基于新版 RS/DS 要求完成 D 的工作。本轮在 `codex/d-foundation` 完成：
+本轮在最新 ABC 基线上完成 D 的端到端接线：
 
-- Flyway V1–V7：提醒、Room、Member、Booking、Payment、审计事件、统一锁表与初始房型目录。
-- `NotificationService`：上海时区一天前 09:00 提醒、幂等 revision、改期自动重排、取消、有界重试、版本化发送认领与隐私安全错误码。
-- 邮件端口：默认 Mock；可选 `smtp-email` profile，通过 `SPRING_MAIL_*` 与 `NOTIFICATION_FROM_ADDRESS` 环境配置，不在源码保存凭据。
-- `JdbcRoomInventoryRepository`：事务内统一锁序、原子快照替换、价格/状态审计、booking allocation 合并读、并发冲突映射。
-- 测试基础设施：`.github/workflows/ci.yml`、`scripts/test.ps1`、H2 全量 schema 契约测试、JaCoCo BUNDLE 90% 门槛。
+- Flyway V1–V8：Room/Member/Membership/Staff/Booking/Payment/Reminder schema、统一锁、审计历史和 V8 字段/历史表。
+- `NotificationService` 保持一天前 09:00 上海时区提醒、幂等 revision、取消/重排、重试、版本化认领，并新增 stale SENDING lease 恢复。
+- `BookingReminderEventListener` 在 Booking 创建/支付成功后安排提醒，在失败/过期后取消；Booking 与 reminder 写入同一事务。
+- D 新增 `BookingInventoryPort` 与 JDBC 实现，修复 C 不能通过 B 端口写 booking block 的集成问题；释放时先写历史再删除 active occupancy 投影。
+- 新增 Member、Membership、Staff、Booking、Payment 的 MySQL JDBC adapter，补齐 `mysql` profile 启动所需 bean。
+- 测试基础设施：`MySqlProfileIntegrationTest`、环境门禁 `MySqlLiveIntegrationTest`、MySQL 8 CI service、H2/MySQL-mode 验证和 JaCoCo。
 
-实际验证：Windows、Temurin JDK 17.0.20.1、Maven 3.9.11；`.\scripts\maven.ps1 --batch-mode --no-transfer-progress verify` 为 `BUILD SUCCESS`；245 tests / 0 failures / 0 errors / 0 skipped；Flyway 在全新 H2 schema 成功应用 7 个迁移；JaCoCo 总行覆盖率 91.59%，90% BUNDLE 门槛通过；打包 JAR 在 127.0.0.1:18080 启动后健康检查为 UP。
+实际验证：Windows、Temurin JDK 17.0.20.1、Maven Wrapper 3.9.11；`.\scripts\test.ps1` 为 BUILD SUCCESS；290 tests / 0 failures / 0 errors / 1 skipped（真实 MySQL 环境门禁）；Flyway 在全新 H2 schema 成功应用 8 个迁移；JaCoCo 总行覆盖率 90.11%，分支覆盖率 74.63%。
 
-仍未验证：真实 MySQL 8 实例、真实 SMTP provider、GitHub Actions 远端运行、Booking → Reminder 事件联调、SENDING 崩溃恢复、provider 幂等与退信。A/C repository 端口未冻结，因此其 JDBC adapter 仍待联调；D 已提供表、约束、锁和事务入口。详见 `docs/d-persistence-notification-foundation.md` 与 `log/2026-11-07-d-completion.md`。
+仍未验证：真实 MySQL 8 实例、真实 SMTP provider、GitHub Actions 远端运行、真实 Q5/Q7 用户测试。D 的 CSV/Test Plan/Test Report/Evidence Index 见 `docs/test/d-*` 与 `docs/evidence-index.md`；不得把本地 H2/Mock 结果写成最终验收。
+
 ## D 通知与持久化基础 2026-10-29（历史）
 
 用户确认承担 D 的工作后，本轮在本地分支 `codex/d-foundation` 增加 Flyway、`V1__create_reminder_schedule.sql`、JDBC 提醒仓储、一天前提醒服务、provider-neutral 邮件端口、默认 Mock 邮件适配器、opt-in 调度器和 JaCoCo 报告/70% 行覆盖率门槛。没有创建 Booking/Payment/Room/Member 业务表，没有接入真实邮件供应商，也没有实现 Q8 CR3 三天前提醒。

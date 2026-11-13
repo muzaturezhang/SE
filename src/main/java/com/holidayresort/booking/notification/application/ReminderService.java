@@ -94,6 +94,7 @@ public class ReminderService implements NotificationService {
     @Override
     public DispatchResult dispatchDue() {
         Instant firstNow = clock.instant();
+        reminders.recoverStaleSending(firstNow.minus(properties.sendLease()), firstNow, properties.maxAttempts());
         List<ReminderSchedule> due = reminders.findDue(firstNow, LocalDate.now(clock), properties.batchSize());
         int sent = 0;
         int retrying = 0;

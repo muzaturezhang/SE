@@ -18,7 +18,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 class SmtpEmailTransportTest {
 
     private static final NotificationProperties PROPERTIES =
-            new NotificationProperties(false, 50, 3, Duration.ofMinutes(15), 60_000, 9,
+            new NotificationProperties(false, 50, 3, Duration.ofMinutes(15), Duration.ofMinutes(5), 60_000, 9,
                     "booking@example.test");
 
     @Test

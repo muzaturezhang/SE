@@ -14,5 +14,9 @@ public enum BookingStatus {
     PAID,
     FAILED,
     UNDER_REVIEW,
-    EXPIRED
+    EXPIRED;
+
+    public boolean isTerminal() {
+        return this == PAID || this == FAILED || this == EXPIRED;
+    }
 }

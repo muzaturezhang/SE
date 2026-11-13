@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * A-owned customer registration. Passwords follow the team policy and are
@@ -32,6 +33,7 @@ public class RegistrationService {
         this.clock = clock;
     }
 
+    @Transactional
     public Customer register(String displayName, String email, String password) {
         String name = displayName == null ? "" : displayName.strip();
         String address = email == null ? "" : email.strip().toLowerCase(Locale.ROOT);

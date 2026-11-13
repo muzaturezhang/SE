@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  * Sandbox payment provider. No real network calls; simulates Alipay sandbox.
  */
 @Component
-@Profile("!mysql & (dev | test)")
+@Profile("!live-payment")
 public class SandboxPaymentProvider implements PaymentProvider {
 
     private final AtomicLong counter = new AtomicLong(1000);

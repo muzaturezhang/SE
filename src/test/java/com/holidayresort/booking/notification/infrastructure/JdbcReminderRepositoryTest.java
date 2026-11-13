@@ -129,6 +129,20 @@ class JdbcReminderRepositoryTest {
                 Integer.class, reminder.id())).isEqualTo(1);
     }
 
+    @Test
+    void staleSendingRowsAreReclaimedWithoutLosingAttemptCount() {
+        ReminderSchedule reminder = reminders.upsert(draft("BK-1005", "guest@example.com", CHECK_IN));
+        assertThat(reminders.claimForSending(reminder.id(), reminder.version(), NOW)).isTrue();
+        jdbcTemplate.update("""
+                UPDATE reminder_schedule SET last_attempt_at = ? WHERE id = ?
+                """, java.sql.Timestamp.from(NOW.minusSeconds(3600)), reminder.id());
+        assertThat(reminders.recoverStaleSending(NOW.minusSeconds(1), NOW, 3)).isEqualTo(1);
+        ReminderSchedule recovered = reminders.findById(reminder.id()).orElseThrow();
+        assertThat(recovered.status()).isEqualTo(ReminderStatus.PENDING);
+        assertThat(recovered.attemptCount()).isEqualTo(1);
+        assertThat(recovered.lastError()).isEqualTo("DELIVERY_LEASE_EXPIRED");
+    }
+
     private static ReminderDraft draft(String reference, String email, LocalDate checkIn) {
         LocalDate remindOn = checkIn.minusDays(ReminderKind.ONE_DAY.daysBefore());
         return new ReminderDraft(

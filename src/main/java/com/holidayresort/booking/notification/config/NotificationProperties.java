@@ -17,7 +17,9 @@ public record NotificationProperties(
         @DefaultValue("50") @Min(1) @Max(500) int batchSize,
         @DefaultValue("3") @Min(1) @Max(10) int maxAttempts,
         @DefaultValue("15m") @NotNull Duration retryDelay,
+        @DefaultValue("5m") @NotNull Duration sendLease,
         @DefaultValue("60000") long dispatchIntervalMs,
         @DefaultValue("9") @Min(0) @Max(23) int sendHour,
         @DefaultValue("no-reply@example.invalid") @NotBlank @Email String fromAddress) {
+
 }

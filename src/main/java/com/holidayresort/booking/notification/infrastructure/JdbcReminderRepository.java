@@ -232,6 +232,23 @@ public class JdbcReminderRepository implements ReminderRepository {
         return updated;
     }
 
+    @Override
+    public int recoverStaleSending(Instant cutoff, Instant now, int maxAttempts) {
+        int exhausted = jdbcTemplate.update("""
+                UPDATE reminder_schedule
+                SET status = ?, next_attempt_at = NULL, last_error = ?, updated_at = ?, version = version + 1
+                WHERE status = ? AND last_attempt_at < ? AND attempt_count >= ?
+                """, ReminderStatus.FAILED.name(), "DELIVERY_LEASE_EXPIRED",
+                timestamp(now), ReminderStatus.SENDING.name(), timestamp(cutoff), maxAttempts);
+        int reclaimed = jdbcTemplate.update("""
+                UPDATE reminder_schedule
+                SET status = ?, next_attempt_at = ?, last_error = ?, updated_at = ?, version = version + 1
+                WHERE status = ? AND last_attempt_at < ? AND attempt_count < ?
+                """, ReminderStatus.PENDING.name(), timestamp(now), "DELIVERY_LEASE_EXPIRED",
+                timestamp(now), ReminderStatus.SENDING.name(), timestamp(cutoff), maxAttempts);
+        return exhausted + reclaimed;
+    }
+
     private ReminderSchedule insert(ReminderDraft draft) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         int inserted = jdbcTemplate.update(connection -> {

@@ -293,3 +293,48 @@ void lockPayment();  // ROOM_INVENTORY -> BOOKING -> PAYMENT
 - V1–V7 schema 已覆盖 room/member/booking/payment/reminder 与审计表；`booking_room_night(room_id, stay_date)` 主键在 DB 层防止重复占用。
 - `email_normalized` 唯一、房号主键、支付幂等键唯一；金额为整数分。
 - A/C 的 JDBC adapter 待其 repository 端口冻结后由 D 补实现；不能从 D 的 schema 反向冻结 A/C 状态机。
+## 2026-11-13：D 集成端口与 profile 基线
+
+Owner：D；评审人 A/B/C。以下签名已随当前代码落地，并已由 `MySqlProfileIntegrationTest` 在 H2 MySQL-mode 下验证；真实 MySQL 8 由 CI `mysql-integration` job 验证。
+
+### Booking 库存端口
+
+```java
+interface BookingInventoryPort {
+    Booking allocate(String roomTypeId, StayPeriod stay, int roomCount,
+                     AllocationFactory factory);
+    void release(Booking booking, String reason);
+
+    @FunctionalInterface
+    interface AllocationFactory {
+        Booking create(RoomType roomType, List<String> roomIds);
+    }
+}
+```
+
+- `allocate` 在 `ROOM_INVENTORY -> BOOKING` 锁序下重新读取房型和物理房间可用性，调用 C 的 factory 保存 Booking，再写 allocation 和 active room-night。
+- `release` 先把 active room-night 复制到 `booking_room_night_history`，再删除 active 投影、标记 allocation released，并取消提醒。
+- B 的 `RoomInventoryEditor` 仍只负责 staff room management；C 不再借用该端口写 booking block。
+
+### Booking → Reminder 事件
+
+```java
+record BookingLifecycleEvent(Type type, Booking booking, String roomTypeName) {
+    enum Type { CREATED, STATUS_CHANGED }
+}
+```
+
+`BookingService` 在创建、支付成功、失败、过期状态变化时发布事件。D 的 `BookingReminderEventListener` 在同一个事务中安排/取消 reminder；邮件发送仍由 opt-in scheduler 在事务外完成。
+
+### MySQL profile
+
+- `mysql` profile 激活 Room/Member/Membership/Staff/Booking/Payment/Reminder JDBC adapter、BookingInventoryPort 和 SandboxPaymentProvider。
+- `dev`/`test` 继续使用 A/B/C 内存 adapter，便于快速运行和隔离测试。
+- `STAFF_USERNAME` 与长度至少 16 的 `STAFF_PASSWORD` 可在 `mysql` profile 下幂等预置 STAFF；不得在源码或 YAML 提交真实密码。
+- `MYSQL_URL`、`MYSQL_USERNAME`、`MYSQL_PASSWORD` 只从环境注入。
+
+### 测试与证据
+
+- `MySqlProfileIntegrationTest`：JDBC wiring、幂等提交、重复回调、Booking → Reminder、失败取消和释放历史。
+- `MySqlLiveIntegrationTest`：真实 MySQL 8 migration smoke；无 `MYSQL_URL` 时明确 skip。
+- `docs/test/d-test-plan.md`、`d-test-case-register.csv`、`d-defect-log.csv`、`d-test-report.md` 和 `docs/evidence-index.md` 记录当前内部验证。

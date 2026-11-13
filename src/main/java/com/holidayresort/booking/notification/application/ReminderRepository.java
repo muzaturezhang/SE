@@ -33,4 +33,8 @@ public interface ReminderRepository {
             String errorCode,
             Instant nextAttemptAt,
             Instant updatedAt);
+    /** Reclaims rows abandoned in SENDING after a process crash. */
+    default int recoverStaleSending(Instant cutoff, Instant now, int maxAttempts) {
+        return 0;
+    }
 }

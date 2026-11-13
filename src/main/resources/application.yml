@@ -41,11 +41,16 @@ app:
     discount-percent: ${MEMBERSHIP_DISCOUNT_PERCENT:5}
     duration-days: ${MEMBERSHIP_DURATION_DAYS:365}
 
+booking:
+  expiry-enabled: ${BOOKING_EXPIRY_ENABLED:false}
+  expiry-interval-ms: ${BOOKING_EXPIRY_INTERVAL_MS:60000}
+
 notification:
   dispatch-enabled: false
   batch-size: 50
   max-attempts: 3
   retry-delay: 15m
+  send-lease: 5m
   dispatch-interval-ms: 60000
   send-hour: ${NOTIFICATION_SEND_HOUR:9}
   from-address: ${NOTIFICATION_FROM_ADDRESS:no-reply@example.invalid}

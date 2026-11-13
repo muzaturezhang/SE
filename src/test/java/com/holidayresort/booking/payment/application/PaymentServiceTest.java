@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.holidayresort.booking.booking.application.BookingService;
 import com.holidayresort.booking.booking.domain.Booking;
 import com.holidayresort.booking.booking.domain.BookingStatus;
+import com.holidayresort.booking.booking.infrastructure.InMemoryBookingInventoryPort;
 import com.holidayresort.booking.booking.infrastructure.InMemoryBookingRepository;
 import com.holidayresort.booking.config.BookingProperties;
 import com.holidayresort.booking.member.application.MembershipService;
@@ -62,8 +63,8 @@ class PaymentServiceTest {
         MembershipService memberships = new MembershipService(members, memberR,
                 new com.holidayresort.booking.config.MembershipProperties(68000, 5, 365), clock);
 
-        bookings = new BookingService(bookingRepo, roomQuery, inventory, memberships,
-                new BookingProperties(15), clock);
+        bookings = new BookingService(bookingRepo, roomQuery, new InMemoryBookingInventoryPort(inventory), memberships,
+                new BookingProperties(15), clock, event -> { });
         booking = bookings.createBooking(customer.id(), "courtyard",
                 LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 17), 1,
                 "Zhang San", "zhang@example.com", "idem-pay-1");

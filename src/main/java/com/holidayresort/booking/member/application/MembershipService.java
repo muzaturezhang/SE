@@ -10,6 +10,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * A-owned membership rules. Applications stay PENDING until the payment
@@ -56,6 +57,7 @@ public class MembershipService {
     }
 
     /** Records an application with the current fee snapshot; idempotent while unconfirmed. */
+    @Transactional
     public Membership requestApplication(String customerId) {
         requireCustomer(customerId);
         Membership current = memberships.findByCustomerId(customerId).orElse(null);
@@ -70,6 +72,7 @@ public class MembershipService {
     }
 
     /** Called by the payment owner after its verification succeeds; idempotent. */
+    @Transactional
     public Membership confirmPayment(String customerId, LocalDate paidOn) {
         requireCustomer(customerId);
         Membership application = memberships.findByCustomerId(customerId)

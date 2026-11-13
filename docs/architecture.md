@@ -31,7 +31,7 @@ Room 已建立 StayPeriod、Room、RoomType、RoomBlock、RoomInventory 领域�
 
 ## 安全与时间
 
-当前公开 `/`、`/rooms`、静态资源和健康检查；管理路径 `/admin/**` 要求 ROLE_STAFF，其他请求默认拒绝。默认 profile 不提供身份或登录；可选 local-staff 为仅回环 dev 环境提供临时 Session 登录，用于 B 独立验证。CSRF 保持开启。A 负责正式认证与身份接入。D 已提供 Flyway V1–V7、提醒 outbox、Mock/SMTP 邮件端口、统一锁与完整业务 schema；A/C 的业务 repository adapter 仍待其端口冻结。
+当前公开 `/`、`/rooms`、静态资源和健康检查；管理路径 `/admin/**` 要求 ROLE_STAFF，其他请求默认拒绝。默认 profile 不提供身份或登录；可选 local-staff 为仅回环 dev 环境提供临时 Session 登录，用于 B 独立验证。CSRF 保持开启。A 负责正式认证与身份接入。D 已提供 Flyway V1–V8、提醒 outbox、Mock/SMTP 邮件端口、统一锁、完整业务 schema，以及 A/C 的 Member/Membership/Staff/Booking/Payment JDBC adapter；Booking 使用独立库存端口与 D 的事务边界。
 
 应用提供 Asia/Shanghai 的 Clock Bean。业务日期使用 LocalDate；后续服务注入 Clock，避免依赖测试机器的默认时区。金额与共享状态尚无公共类，避免在各模块分别定义。
 

@@ -1,0 +1,25 @@
+Test ID,Requirement,Design/Implementation,Test type,Expected result,Evidence,Status
+TC-D-001,FR-REM-001,ReminderService + JdbcReminderRepository,Unit/integration,Reminder is scheduled at 09:00 Shanghai time one day before check-in,ReminderServiceTest / JdbcReminderRepositoryTest,PASS
+TC-D-002,FR-REM-001,NotificationProperties,Configuration,Default send hour is 09:00 and invalid values are rejected,NotificationProperties validation / schema test,PASS
+TC-D-003,FR-REM-002,ReminderEmailComposer,Integration,Email contains reference dates and room type but no credentials,ReminderServiceTest / SmtpEmailTransportTest,PASS
+TC-D-004,FR-REM-002,EmailDeliveryException / ReminderService,Unit,Safe error code is persisted and no recipient data is logged,ReminderServiceTest,PASS
+TC-D-005,FR-REM-003,BookingReminderEventListener + NotificationService,Integration,Failed/expired booking cancels the reminder; paid/created booking schedules it,MySqlProfileIntegrationTest,PASS
+TC-D-006,FR-REM-003,JdbcReminderRepository,Integration,Changed recipient/date/room type reschedules the same revision and appends history,JdbcReminderRepositoryTest,PASS
+TC-D-007,FR-REM-003,JdbcReminderRepository,Integration,Stale SENDING row is reclaimed or terminally failed after lease expiry,JdbcReminderRepositoryTest,PASS
+TC-D-008,FR-DB-001,Flyway V1-V8,Schema,Clean H2 schema applies all migrations and seed catalogue,SchemaContractTest / CleanTestDataResetTest,PASS
+TC-D-009,FR-DB-001,JdbcMemberRepository,Repository,Customer is stored and looked up case-insensitively,MySqlProfileIntegrationTest,PASS
+TC-D-010,FR-DB-001,JdbcMembershipRepository,Repository,Membership application and confirmation persist with audit event,MySqlProfileIntegrationTest,PASS
+TC-D-011,FR-DB-001,JdbcStaffDirectory,Repository,Provisioned STAFF account can be stored and found,MySqlProfileIntegrationTest,PASS
+TC-D-012,FR-DB-001,JdbcBookingRepository,Repository,Booking price snapshot/idempotency/status/allocation mapping survives reload,MySqlProfileIntegrationTest,PASS
+TC-D-013,FR-DB-001,JdbcPaymentRepository,Repository,Payment amount/status/idempotency/provider fields survive reload,MySqlProfileIntegrationTest,PASS
+TC-D-014,FR-DB-002,booking_room_night + history,Integration,Active occupancy blocks overlap and release preserves nightly history,MySqlProfileIntegrationTest / SchemaContractTest,PASS
+TC-D-015,FR-DB-002,customer unique constraints,Schema,Case-insensitive duplicate email is rejected,SchemaContractTest,PASS
+TC-D-016,FR-DB-002,room primary key,Schema,Duplicate room identifier is rejected,SchemaContractTest,PASS
+TC-D-017,FR-DB-002,booking unique idempotency,Schema,Duplicate booking idempotency key is rejected,SchemaContractTest / MySqlProfileIntegrationTest,PASS
+TC-D-018,FR-DB-003,JdbcBookingInventoryPort + JdbcPersistenceLockService,Integration,Booking allocation and persistence execute with ROOM_INVENTORY -> BOOKING lock order,MySqlProfileIntegrationTest,PASS
+TC-D-019,FR-DB-003,PaymentService + repositories,Integration,Duplicate payment callback is idempotent and booking state updates exactly once,MySqlProfileIntegrationTest,PASS
+TC-D-020,FR-DB-004,Maven/JUnit/JaCoCo/CI,Verification,`clean verify` and CI artifacts are reproducible,test-report.md / GitHub Actions,PASS_LOCAL / CI_PENDING
+TC-D-021,FR-DB-001,MySQL 8 migration smoke,Integration,Real MySQL 8 applies all migrations and seed data,MySqlLiveIntegrationTest,SKIPPED_LOCAL_ENV
+TC-D-022,NFR-SEC-01,SMTP and D logging,Privacy,No credentials or raw personal data appear in D source/test evidence,static review / SmtpEmailTransportTest,PASS
+TC-D-023,FR-BOOK-001..003,BookingInventoryPort + JdbcBookingInventoryPort,Integration,Booking rollback/release does not leave active room-night rows,MySqlProfileIntegrationTest,PASS
+TC-D-024,NFR-TIM-01,Clock-injected services,Integration,Business deadlines and reminder timestamps use the injected clock/timezone,ReminderServiceTest / MySqlProfileIntegrationTest,PASS
