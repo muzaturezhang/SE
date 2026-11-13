@@ -58,6 +58,7 @@ The coverage rule is enforcing a 90% bundle line threshold. Branch coverage is r
 - `SchemaContractTest`: V8 history and audit tables.
 - `BookingService`: dedicated `BookingInventoryPort` with in-memory and JDBC implementations.
 - `PaymentService` / `PaymentTransactionService`: provider I/O outside the transaction, atomic payment+booking state updates, safer retry/idempotency handling, negative staff reconciliation cases and clock-based paid timestamps.
+- Cross-module write transactions use `READ_COMMITTED` so lock acquisition is followed by a fresh availability read; the real-MySQL concurrency test caught and verified this boundary.
 
 ## 5. Known limitations
 

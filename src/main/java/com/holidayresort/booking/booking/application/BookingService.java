@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -86,7 +87,7 @@ public class BookingService {
      * the configured minutes. A client retry with the same key returns the
      * original booking.
      */
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Booking createBooking(String customerId, String roomTypeId,
                                  LocalDate arrival, LocalDate departure, int roomCount,
                                  String guestName, String guestEmail, String idempotencyKey) {
@@ -134,7 +135,7 @@ public class BookingService {
         return bookings.findByCustomerId(customerId);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public int releaseExpiredBookings() {
         LocalDateTime now = LocalDateTime.now(clock);
         List<Booking> pending = bookings.findAll().stream()
@@ -151,7 +152,7 @@ public class BookingService {
     }
 
     /** Mark a booking as paid (called by PaymentService after successful payment). */
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Booking markPaid(String reference) {
         Booking booking = findByReference(reference);
         if (booking.status() == BookingStatus.PAID) {
@@ -168,7 +169,7 @@ public class BookingService {
     }
 
     /** Mark a booking as failed and release its rooms (called by PaymentService). */
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Booking markFailed(String reference) {
         Booking booking = findByReference(reference);
         if (booking.status().isTerminal()) {
@@ -182,7 +183,7 @@ public class BookingService {
     }
 
     /** Move a booking to under review when the payment result is unknown. */
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Booking markUnderReview(String reference) {
         Booking booking = findByReference(reference);
         if (booking.status().isTerminal()) {
