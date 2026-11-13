@@ -176,7 +176,7 @@ $env:JAVA_HOME = '<project>/.cache/jdk17/extracted/jdk-17.0.20.1+1'
 .\scripts\test.ps1
 ```
 
-结果：`BUILD SUCCESS`；290 tests、0 failures、0 errors、1 skipped（真实 MySQL 环境门禁）；Flyway 在全新 H2 数据库成功应用 8 个迁移；JaCoCo 总行覆盖率 90.11%，分支覆盖率 74.63%，90% BUNDLE 门槛通过。MySQL-mode profile 集成测试验证 Customer/Membership/Staff/Booking/Payment JDBC adapter、幂等提交、重复回调和 Booking→Reminder 生命周期。
+结果：`BUILD SUCCESS`；303 tests、0 failures、0 errors、1 skipped（真实 MySQL 环境门禁）；Flyway 在全新 H2 数据库成功应用 8 个迁移；JaCoCo 总行覆盖率 90.89%，分支覆盖率 75.59%，90% BUNDLE 门槛通过。MySQL-mode profile 集成测试验证 Customer/Membership/Staff/Booking/Payment JDBC adapter、幂等提交、重复回调和 Booking→Reminder 生命周期。
 
 ## 9. 明确未完成与联调条件
 

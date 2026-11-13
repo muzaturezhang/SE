@@ -96,7 +96,7 @@ Windows PowerShell：
 java -jar target/holiday-resort-booking-0.1.0-SNAPSHOT.jar
 ```
 
-测试覆盖基础设施、安全边界、日期区间、Room 查询、管理写操作、原子更新、本地预览登录、预订 UI 输入、会话隔离、账户表单、站内返回白名单、会员展示、D 的提醒/重试/取消/重排、SENDING lease 恢复、完整 schema 约束、统一锁、Booking/Payment/Member/Staff JDBC adapter 及 Booking→Reminder 生命周期。当前本地验证为 290 项测试、0 失败、0 错误、1 项真实 MySQL 环境门禁 skip，JaCoCo 总行覆盖率 90.11%。实际执行结果见 [D 测试报告](docs/test/d-test-report.md) 与 [证据索引](docs/evidence-index.md)。
+测试覆盖基础设施、安全边界、日期区间、Room 查询、管理写操作、原子更新、本地预览登录、预订 UI 输入、会话隔离、账户表单、站内返回白名单、会员展示、D 的提醒/重试/取消/重排、SENDING lease 恢复、完整 schema 约束、统一锁、Booking/Payment/Member/Staff JDBC adapter 及 Booking→Reminder 生命周期。当前本地验证为 303 项测试、0 失败、0 错误、1 项真实 MySQL 环境门禁 skip，JaCoCo 总行覆盖率 90.89%。实际执行结果见 [D 测试报告](docs/test/d-test-report.md) 与 [证据索引](docs/evidence-index.md)。
 
 ## 目录
 

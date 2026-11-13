@@ -17,14 +17,14 @@ Status: internal engineering verification. This is not a final course Test Repor
 
 | Item | Result |
 | --- | --- |
-| Tests executed | 290 |
-| Passed | 289 |
+| Tests executed | 303 |
+| Passed | 302 |
 | Failed | 0 |
 | Errors | 0 |
 | Skipped | 1 (`MySqlLiveIntegrationTest`, no local `MYSQL_URL`) |
 | Build | BUILD SUCCESS |
-| JaCoCo line coverage | 90.11% |
-| JaCoCo branch coverage | 74.63% |
+| JaCoCo line coverage | 90.89% |
+| JaCoCo branch coverage | 75.59% |
 | Flyway migrations | 8 applied successfully to a clean H2 schema |
 | Packaged artifact | `target/holiday-resort-booking-0.1.0-SNAPSHOT.jar` |
 
@@ -45,12 +45,17 @@ The coverage rule is enforcing a 90% bundle line threshold. Branch coverage is r
 ## 4. Tests added or strengthened
 
 - `BookingStatusTest`: terminal-state contract.
-- `MySqlProfileIntegrationTest`: real Spring wiring under the `mysql` profile with H2 MySQL mode, JDBC customer/membership/staff/booking/payment adapters, idempotent booking/payment submission, booking/reminder lifecycle and release history.
+- `BookingReminderEventListenerTest`: created/paid/failed reminder actions, same-day skip and non-date error propagation.
+- `ReminderDispatchLeaseTest`: dispatch invokes stale `SENDING` lease recovery.
+- `JdbcStaffProvisionerConfigurationTest`: blank/partial/valid/idempotent staff provisioning.
+- `MySqlProfileIntegrationTest`: real Spring wiring under the `mysql` profile with H2 MySQL mode, JDBC customer/membership/staff/booking/payment adapters, idempotent booking/payment submission, duplicate callback handling, booking/reminder lifecycle and released-room resale history.
 - `MySqlLiveIntegrationTest`: real MySQL smoke test, environment-gated.
 - `JdbcReminderRepositoryTest`: stale `SENDING` lease recovery.
+- `docs/test/user-test-plan.md`, `user-test-consent-and-privacy.md`, `user-test-observation-sheet.csv`: ready-to-execute Q5/Q7 protocol; no participant results fabricated.
+- `docs/test/d-failure-injection-matrix.md`: failure and boundary trace.
 - `SchemaContractTest`: V8 history and audit tables.
 - `BookingService`: dedicated `BookingInventoryPort` with in-memory and JDBC implementations.
-- `PaymentService` / `PaymentTransactionService`: provider I/O outside the transaction, atomic payment+booking state updates, safer retry/idempotency handling and clock-based paid timestamps.
+- `PaymentService` / `PaymentTransactionService`: provider I/O outside the transaction, atomic payment+booking state updates, safer retry/idempotency handling, negative staff reconciliation cases and clock-based paid timestamps.
 
 ## 5. Known limitations
 
