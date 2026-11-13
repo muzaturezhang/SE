@@ -176,11 +176,11 @@ $env:JAVA_HOME = '<project>/.cache/jdk17/extracted/jdk-17.0.20.1+1'
 .\scripts\test.ps1
 ```
 
-结果：`BUILD SUCCESS`；303 tests、0 failures、0 errors、1 skipped（真实 MySQL 环境门禁）；Flyway 在全新 H2 数据库成功应用 8 个迁移；JaCoCo 总行覆盖率 90.89%，分支覆盖率 75.59%，90% BUNDLE 门槛通过。MySQL-mode profile 集成测试验证 Customer/Membership/Staff/Booking/Payment JDBC adapter、幂等提交、重复回调和 Booking→Reminder 生命周期。
+结果：`BUILD SUCCESS`；303 tests、0 failures、0 errors、1 skipped（本机无 MYSQL_URL）；Flyway 在全新 H2 数据库成功应用 8 个迁移；JaCoCo 总行覆盖率 90.89%，分支覆盖率 75.59%，90% BUNDLE 门槛通过。MySQL-mode profile 集成测试验证 Customer/Membership/Staff/Booking/Payment JDBC adapter、幂等提交、重复回调、释放后重新销售和 Booking→Reminder 生命周期。GitHub Actions push run `43881256201` 与 PR run `43882193364` 的 Java 17 verification、MySQL 8 integration 均通过；PR #2 已合并到 `main`（`aa1275d`）。
 
 ## 9. 明确未完成与联调条件
 
-- 本机未运行真实 MySQL 8；`MySqlLiveIntegrationTest` 在无 `MYSQL_URL` 时明确 skip，CI service job 负责最终验证。
+- 本机没有配置 `MYSQL_URL`，因此 `MySqlLiveIntegrationTest` 本地明确 skip；同一测试已由 GitHub Actions 的真实 MySQL 8 service job 通过。
 - 未向真实 SMTP provider 发信；Mock/SMTP adapter unit test 不等同于真实投递、退信或配额证据。
 - C 当前没有完整的取消/改期 UI/service 方法；提醒 listener 已支持相应事件，待 C 补齐后用真实事件回归。
 - 会员费支付路径仍未在 C 的 PaymentService 中实现；D 的 schema 和 adapter 已预留 `MEMBERSHIP` purpose，但不得在报告中写成已端到端完成。

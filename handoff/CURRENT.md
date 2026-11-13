@@ -1,6 +1,6 @@
 # 当前交接
 
-更新时间：2026-11-13，Asia/Shanghai。B 的 Room/UI、A 的账户/会员、C 的 Booking/Payment 与 D 的通知/持久化已在本地合并基线上可编译；D 已补齐 H2/MySQL JDBC adapter、BookingInventoryPort、Booking→Reminder 联动、V8 迁移、MySQL-mode 集成测试与 MySQL 8 CI service。真实 MySQL 8、真实 SMTP、GitHub Actions 远端结果和 Q5/Q7 用户测试仍不能由本地结果替代。
+更新时间：2026-11-13，Asia/Shanghai。B 的 Room/UI、A 的账户/会员、C 的 Booking/Payment 与 D 的通知/持久化已在本地合并基线上可编译；D 已补齐 H2/MySQL JDBC adapter、BookingInventoryPort、Booking→Reminder 联动、V8 迁移、MySQL-mode 集成测试与 MySQL 8 CI service。真实 MySQL 8 已由 GitHub Actions push/PR 两套 workflow 验证；真实 SMTP 和 Q5/Q7 用户测试仍不能由本地结果替代。
 
 ## D 集成完成 2026-11-13
 
@@ -15,7 +15,7 @@
 
 实际验证：Windows、Temurin JDK 17.0.20.1、Maven Wrapper 3.9.11；`.\scripts\test.ps1` 为 BUILD SUCCESS；303 tests / 0 failures / 0 errors / 1 skipped（真实 MySQL 环境门禁）；Flyway 在全新 H2 schema 成功应用 8 个迁移；JaCoCo 总行覆盖率 90.89%，分支覆盖率 75.59%。
 
-仍未验证：真实 MySQL 8 实例、真实 SMTP provider、GitHub Actions 远端运行、真实 Q5/Q7 用户测试。D 的 CSV/Test Plan/Test Report/Evidence Index 见 `docs/test/d-*` 与 `docs/evidence-index.md`；不得把本地 H2/Mock 结果写成最终验收。
+已验证：GitHub Actions push run 43881256201 与 PR run 43882193364 的 Java 17 verification、MySQL 8 integration 均成功；PR #2 已合并到 `main`（`aa1275d`）。仍未验证：真实 SMTP provider 和真实 Q5/Q7 用户测试。D 的 CSV/Test Plan/Test Report/Evidence Index 见 `docs/test/d-*` 与 `docs/evidence-index.md`；不得把本地 H2/Mock 结果写成最终验收。
 
 ## D 通知与持久化基础 2026-10-29（历史）
 
