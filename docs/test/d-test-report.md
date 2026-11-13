@@ -71,8 +71,8 @@ The coverage rule is enforcing a 90% bundle line threshold. Branch coverage is r
 
 ## 6. CI evidence
 
-- Push run [43890784432](https://github.com/muzaturezhang/SE/actions/runs/43890784432): Java 17 verification PASS; MySQL 8 integration PASS; 0 annotations.
-- PR run [43890798856](https://github.com/muzaturezhang/SE/actions/runs/43890798856): Java 17 verification PASS; MySQL 8 integration PASS; 0 annotations.
+- Push run [43892676670](https://github.com/muzaturezhang/SE/actions/runs/43892676670): Java 17 verification PASS; MySQL 8 integration PASS; 0 annotations.
+- PR run [43892690685](https://github.com/muzaturezhang/SE/actions/runs/43892690685): Java 17 verification PASS; MySQL 8 integration PASS; 0 annotations.
 - Real MySQL job now exercises booking creation/idempotency, payment callback/idempotency, reminder creation/cancellation and release history, not only migrations.
 
 ## 7. Conclusion

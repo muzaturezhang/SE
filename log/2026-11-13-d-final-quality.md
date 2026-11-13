@@ -34,8 +34,8 @@
 
 ## 真实 MySQL 生命周期 CI
 
-- Push run 43890784432：Java 17 verification、MySQL 8 integration 均成功。
-- PR run 43890798856：Java 17 verification、MySQL 8 integration 均成功。
+- Push run 43892676670：Java 17 verification、MySQL 8 integration 均成功。
+- PR run 43892690685：Java 17 verification、MySQL 8 integration 均成功。
 - MySQL job 在真实 MySQL 8 上执行 booking/payment/reminder/release 生命周期，0 annotations。
 
 
@@ -45,3 +45,11 @@
 - 原因是事务在等待锁前已读取会员信息并建立旧快照，拿到锁后仍按旧可用性分配。
 - 将 Booking/Payment 跨模块写事务改为 READ_COMMITTED，锁后复核能看到最新已提交占用。
 - 并发测试改为验证恰好一笔成功、一笔冲突，且只留下成功预订的 room-night 行。
+
+
+## 最终 CI
+
+- Push run 43892676670：Java 17 verification、MySQL 8 integration 均成功。
+- PR run 43892690685：Java 17 verification、MySQL 8 integration 均成功。
+- 真实 MySQL 并发测试通过：恰好一笔 booking 成功、一笔冲突，只有赢家的 room-night 行落库。
+- 新 workflow annotations 为 0。
