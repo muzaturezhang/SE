@@ -5,12 +5,12 @@ This index lists engineering evidence only. It does not claim final Stage 3/4 ac
 
 | Evidence ID | Artifact | Verification | Status |
 | --- | --- | --- | --- |
-| EV-D-001 | `target/surefire-reports/` | 303 tests, 0 failures, 0 errors, 1 environment-gated skip | LOCAL PASS |
+| EV-D-001 | `target/surefire-reports/` | 304 tests, 0 failures, 0 errors, 2 environment-gated skips | LOCAL PASS |
 | EV-D-002 | `target/site/jacoco/jacoco.csv` and HTML report | 90.89% line, 75.59% branch | LOCAL PASS |
 | EV-D-003 | `target/holiday-resort-booking-0.1.0-SNAPSHOT.jar` | Spring Boot packaging via `verify` | LOCAL PASS |
 | EV-D-004 | `src/main/resources/db/migration/V1..V8` | Flyway applies 8 migrations to clean H2 and H2-MySQL-mode schema | LOCAL PASS |
 | EV-D-005 | `MySqlProfileIntegrationTest` | JDBC adapters, booking/payment/reminder lifecycle and release history | LOCAL PASS |
-| EV-D-006 | `MySqlLiveIntegrationTest` | Real MySQL 8 migration smoke and seed catalogue | PASS — GitHub Actions run [43881256201](https://github.com/muzaturezhang/SE/actions/runs/43881256201) / PR run [43882193364](https://github.com/muzaturezhang/SE/actions/runs/43882193364) |
+| EV-D-006 | `MySqlLiveIntegrationTest` | Real MySQL 8 migration, seed, JDBC persistence and booking/payment/reminder lifecycle | PASS — GitHub Actions run [43881256201](https://github.com/muzaturezhang/SE/actions/runs/43881256201) / PR run [43882193364](https://github.com/muzaturezhang/SE/actions/runs/43882193364) |
 | EV-D-007 | `.github/workflows/ci.yml` | Java 17 verification and MySQL 8 service jobs | PASS — both jobs succeeded in push run [43881256201](https://github.com/muzaturezhang/SE/actions/runs/43881256201) and PR run [43882193364](https://github.com/muzaturezhang/SE/actions/runs/43882193364) |
 | EV-D-008 | `docs/test/d-test-report.md` | Requirement/test summary and known limitations | UPDATED |
 | EV-D-009 | `docs/test/d-defect-log.csv` | Fixed integration defects and gated environment item | UPDATED |
