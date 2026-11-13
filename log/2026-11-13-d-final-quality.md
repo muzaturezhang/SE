@@ -11,7 +11,7 @@
 ## 工作流维护
 
 - 升级为 `actions/checkout@v7`、`actions/setup-java@v6`、`actions/upload-artifact@v7`。
-- 使用显式 `actions/cache@v6` 缓存项目 `.cache/maven/repository`，移除 setup-java 的无效 Maven cache 路径告警。
+- 使用显式 `actions/cache@v6` 缓存项目 `.cache/maven/repository`，移除 setup-java 的无效 Maven cache 路径告警。\r\n- 将 runner 固定为 `ubuntu-24.04`，避免 `ubuntu-latest` 自动迁移影响可复现性。
 - CI 的已知 warning 已定位为旧 Node runtime、setup-java 弃用和 Maven cache 路径缺失，不是代码失败。
 
 ## 用户测试准备

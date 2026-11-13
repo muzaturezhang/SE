@@ -10,7 +10,7 @@ permissions:
 jobs:
   verify:
     name: Java 17 verification
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -49,7 +49,7 @@ jobs:
 
   mysql-integration:
     name: MySQL 8 integration
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     services:
       mysql:
