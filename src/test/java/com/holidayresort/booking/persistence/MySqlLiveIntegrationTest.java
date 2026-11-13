@@ -15,6 +15,12 @@ import com.holidayresort.booking.payment.domain.PaymentStatus;
 import com.holidayresort.booking.payment.infrastructure.SandboxPaymentProvider;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +61,51 @@ class MySqlLiveIntegrationTest {
                 .isEqualTo(8);
     }
 
+    @Test
+    void concurrentBookingCompetitionAllowsExactlyOneWinner() throws Exception {
+        Customer customer = registration.register("Race Guest", "race@example.com", "safePass1");
+        LocalDate arrival = LocalDate.now(clock).plusDays(40);
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        CountDownLatch start = new CountDownLatch(1);
+        try {
+            Future<Booking> first = pool.submit(() -> {
+                start.await();
+                return bookings.createBooking(customer.id(), "courtyard", arrival, arrival.plusDays(2),
+                        3, "Race Guest", "race@example.com", "race-idem-1");
+            });
+            Future<Booking> second = pool.submit(() -> {
+                start.await();
+                return bookings.createBooking(customer.id(), "courtyard", arrival, arrival.plusDays(2),
+                        3, "Race Guest", "race@example.com", "race-idem-2");
+            });
+            start.countDown();
+
+            int successes = 0;
+            int conflicts = 0;
+            Booking winner = null;
+            for (Future<Booking> future : java.util.List.of(first, second)) {
+                try {
+                    winner = future.get(30, TimeUnit.SECONDS);
+                    successes++;
+                } catch (ExecutionException exception) {
+                    if (exception.getCause() instanceof com.holidayresort.booking.booking.application.BookingException) {
+                        conflicts++;
+                    } else {
+                        throw exception;
+                    }
+                }
+            }
+
+            assertThat(successes).isEqualTo(1);
+            assertThat(conflicts).isEqualTo(1);
+            assertThat(winner).isNotNull();
+            assertThat(jdbcTemplate.queryForObject("""
+                    SELECT COUNT(*) FROM booking_room_night WHERE booking_reference = ?
+                    """, Integer.class, winner.reference())).isEqualTo(6);
+        } finally {
+            pool.shutdownNow();
+        }
+    }
     @Test
     void mysqlEightExercisesBookingPaymentReminderAndReleaseLifecycle() {
         Customer customer = registration.register("Live Guest", "live-guest@example.com", "safePass1");

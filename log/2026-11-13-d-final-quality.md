@@ -24,7 +24,7 @@
 ## 验证
 
 - `clean verify`：BUILD SUCCESS。
-- 304 tests、0 failures、0 errors、2 environment-gated skips。
+- 305 tests、0 failures、0 errors、3 environment-gated skips。
 - JaCoCo line 90.89%，branch 75.59%。
 
 ## 未伪造内容

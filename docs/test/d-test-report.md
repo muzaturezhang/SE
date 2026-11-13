@@ -17,11 +17,11 @@ Status: internal engineering verification. This is not a final course Test Repor
 
 | Item | Result |
 | --- | --- |
-| Tests executed | 304 |
+| Tests executed | 305 |
 | Passed | 302 |
 | Failed | 0 |
 | Errors | 0 |
-| Skipped | 2 (`MySqlLiveIntegrationTest`, no local `MYSQL_URL`) |
+| Skipped | 3 (`MySqlLiveIntegrationTest`, no local `MYSQL_URL`) |
 | Build | BUILD SUCCESS |
 | JaCoCo line coverage | 90.89% |
 | JaCoCo branch coverage | 75.59% |

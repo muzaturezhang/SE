@@ -15,6 +15,7 @@ Status: internal engineering trace. `PASS` means an automated test or successful
 | Staff reconciliation on a non-under-review payment | Reject the operation as a conflict | `PaymentServiceTest.staffCannotConfirmPendingPayment`, `staffCannotRejectPaidPayment` | PASS |
 | Provider query timeout/unknown | Move payment and booking to `UNDER_REVIEW`; keep inventory | `PaymentServiceTest`, `MySqlProfileIntegrationTest` | PASS |
 | MySQL migration and persistence lifecycle on real server | Apply V1–V8, seed, and exercise booking/payment/reminder/release persistence | GitHub Actions MySQL 8 jobs | PASS |
+| Concurrent bookings competing for limited rooms on real MySQL | Exactly one booking succeeds and no partial over-allocation is persisted | `MySqlLiveIntegrationTest.concurrentBookingCompetitionAllowsExactlyOneWinner` | PASS_CI |
 | Real SMTP provider, bounce and quota | Provider-specific delivery evidence | None yet | NOT TESTED |
 | Cancellation/date-change event integration | Reschedule/cancel reminder through C's real event path | Listener unit/integration coverage exists; C service path incomplete | PARTIAL — blocked by C scope |
 | Membership fee payment | Separate payment, then idempotent `confirmPayment` | Schema/adapter only | NOT IMPLEMENTED IN C |
