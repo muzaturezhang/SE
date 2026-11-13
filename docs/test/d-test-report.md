@@ -50,7 +50,7 @@ The coverage rule is enforcing a 90% bundle line threshold. Branch coverage is r
 - `JdbcReminderRepositoryTest`: stale `SENDING` lease recovery.
 - `SchemaContractTest`: V8 history and audit tables.
 - `BookingService`: dedicated `BookingInventoryPort` with in-memory and JDBC implementations.
-- `PaymentService`: transaction annotations, safer retry/idempotency handling and clock-based paid timestamps.
+- `PaymentService` / `PaymentTransactionService`: provider I/O outside the transaction, atomic payment+booking state updates, safer retry/idempotency handling and clock-based paid timestamps.
 
 ## 5. Known limitations
 
