@@ -29,3 +29,11 @@ $env:JAVA_HOME = '<project>/.cache/jdk17/extracted/jdk-17.0.20.1+1'
 - 真实 SMTP provider、退信和 quota。
 - GitHub Actions 远端执行。
 - C 的取消/改期完整 UI/服务路径、会员费支付编排，以及 Q5/Q7 真实用户测试。
+
+
+## CI 结果
+
+- Push run 43881256201：Java 17 verification、MySQL 8 integration 均成功。
+- PR run 43882193364：Java 17 verification、MySQL 8 integration 均成功。
+- PR #2 已合并到 main，合并提交 aa1275d。
+- GitHub 报告 3 warnings / 1 notice，无失败 check；后续使用证据前应展开 annotations 确认是否为非阻塞依赖告警。

@@ -9,7 +9,7 @@ Status: internal engineering verification. This is not a final course Test Repor
 - Maven: 3.9.11 via project wrapper.
 - Default application database: H2 2.3.
 - MySQL-mode integration: H2 `MODE=MySQL` with the production profile selected.
-- Live MySQL test: gated by `MYSQL_URL`; CI job added for MySQL 8.
+- Live MySQL test: verified by GitHub Actions MySQL 8 jobs; locally gated by `MYSQL_URL`.
 - Email: Mock transport; SMTP adapter unit-tested with a mocked JavaMailSender.
 - Payment: sandbox provider; no real funds moved.
 
@@ -27,6 +27,8 @@ Status: internal engineering verification. This is not a final course Test Repor
 | JaCoCo branch coverage | 74.63% |
 | Flyway migrations | 8 applied successfully to a clean H2 schema |
 | Packaged artifact | `target/holiday-resort-booking-0.1.0-SNAPSHOT.jar` |
+| CI Java 17 verification | PASS |
+| CI MySQL 8 integration | PASS |
 
 The coverage rule is enforcing a 90% bundle line threshold. Branch coverage is reported separately because the remaining uncovered branches are concentrated in environment-specific staff provisioning, provider failure variants and live MySQL gating.
 
@@ -37,10 +39,10 @@ The coverage rule is enforcing a 90% bundle line threshold. Branch coverage is r
 | FR-REM-001 | PASS | ReminderServiceTest / JdbcReminderRepositoryTest |
 | FR-REM-002 | PASS | ReminderServiceTest / SmtpEmailTransportTest |
 | FR-REM-003 | PASS for create/paid/fail/expire wired paths; cancellation/change domain methods are not present in the current C UI | BookingReminderEventListener / MySqlProfileIntegrationTest |
-| FR-DB-001 | PASS for H2 and H2-MySQL-mode; real MySQL is CI-gated | MySqlProfileIntegrationTest / MySqlLiveIntegrationTest |
+| FR-DB-001 | PASS for H2, H2-MySQL-mode and real MySQL 8 CI | MySqlProfileIntegrationTest / MySqlLiveIntegrationTest / GitHub Actions |
 | FR-DB-002 | PASS for tested constraints, idempotency and release history | SchemaContractTest / MySqlProfileIntegrationTest |
 | FR-DB-003 | PASS for booking/payment paths covered by this slice | JdbcBookingInventoryPort / PaymentService / JdbcPersistenceLockService tests |
-| FR-DB-004 | PASS locally; GitHub Actions execution remains to be observed after push | Maven verify / CI workflow |
+| FR-DB-004 | PASS locally and in GitHub Actions push/PR workflows | Maven verify / CI workflow |
 
 ## 4. Tests added or strengthened
 
@@ -54,7 +56,7 @@ The coverage rule is enforcing a 90% bundle line threshold. Branch coverage is r
 
 ## 5. Known limitations
 
-1. No local MySQL 8 server was available; the real MySQL test is gated and must be confirmed by the CI job.
+1. The local machine has no MySQL 8 server; the real MySQL test ran successfully in both GitHub Actions workflows.
 2. No live SMTP provider was contacted; only adapter mapping/error conversion and the safe Mock transport were verified.
 3. C's current UI still exposes preview routes and does not yet have production controllers for every C service operation.
 4. Booking cancellation and date-change domain operations are still not present in C's current service surface. The reminder listener supports rescheduling/cancellation when those events are implemented.

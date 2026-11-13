@@ -4,4 +4,4 @@ DEF-002,D foundation pre-merge,High,Booking allocation used B's RoomInventoryEdi
 DEF-003,D foundation pre-merge,High,Booking save and inventory allocation could commit separately,TC-D-018 / TC-D-023,FIXED,BookingService now uses a transactional BookingInventoryPort; release history verified
 DEF-004,D foundation pre-merge,Medium,Booking/Payment schema did not match C's idempotency and failure fields,TC-D-012 / TC-D-013 / TC-D-017,FIXED,V8 migration and repository integration tests pass
 DEF-005,D foundation pre-merge,Medium,No stale SENDING recovery after a process crash,TC-D-007,FIXED,JdbcReminderRepositoryTest passes stale lease recovery
-DEF-006,Environment,Medium,No local MySQL 8 or live SMTP instance was available,TC-D-021,GATED,CI MySQL job added; live test skips only when MYSQL_URL is absent
+DEF-006,Environment,Medium,No local MySQL 8 or live SMTP instance was available,TC-D-021,CI VERIFIED,Both GitHub Actions runs passed Java 17 and MySQL 8 jobs; local skip remains expected
