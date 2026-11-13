@@ -1,49 +1,62 @@
-# D 通知与持久化基础
+# D 通知与持久化实现
 
-状态：D-FOUNDATION-2026-10-29-01，内部开发基线，不是最终课程证据，也不是全系统数据库方案。
+状态：D-COMPLETE-2026-11-07-01，内部开发基线，不是最终课程验收证据。
 
-本文记录 D 负责的通知提醒和持久化基础。当前只落地一天前邮件提醒、提醒调度表、JDBC 适配器、Mock 邮件端口和 JaCoCo 报告入口。Booking、Room、Payment、Member 的表结构、共享状态和事务边界仍未冻结，因此本批不创建跨模块业务表，也不声称已完成 Booking → Reminder 联调。
+图示、状态机和联调顺序见 [D 通知与持久化设计](design/d-notification-persistence.md)。
 
-## 已实现的边界
+本文记录 D 对 RS `FR-REM-001..003`、`FR-DB-001..004` 的实现。代码覆盖 D 自有端口、通知规则、数据库迁移、Room 持久化适配、统一锁序和测试基础设施。A/C 的认证、预订、支付业务服务仍由对应 owner 实现；D 已为它们提供 schema、锁和事务入口，不代写其业务规则。
 
-| 能力 | 位置 | 当前行为 |
+## 1. 需求追踪
+
+| 需求 | 实现 | 测试 |
 | --- | --- | --- |
-| Schema 迁移 | `db/migration/V1__create_reminder_schedule.sql` | Flyway 在 dev、test 和 mysql 配置加载时执行 |
-| 提醒仓储端口 | `notification.application.ReminderRepository` | 幂等插入、到期查询、发送认领和状态更新 |
-| JDBC 适配器 | `notification.infrastructure.JdbcReminderRepository` | H2/MySQL 兼容 SQL；用版本号防止重复发送 |
-| 提醒服务 | `notification.application.ReminderService` | 创建一天前提醒并按批次派发 |
-| 邮件端口 | `notification.email.EmailTransport` | 业务不依赖供应商 SDK |
-| 本地邮件适配器 | `MockEmailTransport` | 只记录内存消息，不发送真实邮件 |
-| 调度入口 | `ReminderDispatchScheduler` | 只有 `notification.dispatch-enabled=true` 才运行 |
-| 覆盖报告 | `jacoco-maven-plugin` | `verify` 后生成 `target/site/jacoco/index.html` |
+| FR-REM-001 | `ReminderService` 使用共享 `Clock` 的 Asia/Shanghai 时区；`scheduledAt = check-in - 1 day at notification.send-hour`（默认 09:00） | `ReminderServiceTest` |
+| FR-REM-002 | `ReminderEmailComposer` 输出参考号、入住/退房日期、房型；无密码或凭据；失败只持久化/记录安全错误码 | `ReminderServiceTest`, `JdbcReminderRepositoryTest` |
+| FR-REM-003 | 同一预订内容变化时原子重排并审计；`cancelOneDayReminder` 取消未来发送；取消行不再进入到期查询 | `ReminderServiceTest`, `JdbcReminderRepositoryTest` |
+| FR-DB-001 | Flyway 同时支持 H2 与 MySQL 8 profile；Room 有 JDBC 持久化适配；其余业务表已版本化建立 | `SchemaContractTest`, `JdbcRoomInventoryRepositoryTest` |
+| FR-DB-002 | 房号主键/唯一约束；`email_normalized` 大小写不敏感唯一键；状态和审计历史不物理删除 | `SchemaContractTest` |
+| FR-DB-003 | `persistence_lock` 定义 room inventory → booking → payment 固定锁序；Room 写入在事务内加锁 | `JdbcPersistenceLockServiceTest`, `JdbcRoomInventoryRepositoryTest` |
+| FR-DB-004 | 全新 H2 schema、JDK 17 `verify`、JaCoCo 90% 总行覆盖率门槛、Windows/Linux 脚本、GitHub Actions | Maven `verify` |
 
-## 对外草案契约
+## 2. 提醒应用契约
 
 ```java
-record ReminderRequest(
+public interface NotificationService {
+    ReminderSchedule scheduleOneDayReminder(ReminderRequest request);
+    boolean cancelOneDayReminder(String bookingReference);
+    DispatchResult dispatchDue();
+}
+
+public record ReminderRequest(
         String bookingReference,
         String recipientEmail,
-        LocalDate checkInDate) {}
-
-ReminderSchedule scheduleOneDayReminder(ReminderRequest request);
-DispatchResult dispatchDue();
+        LocalDate checkInDate,
+        LocalDate checkOutDate,
+        String roomTypeName) {}
 ```
 
-`ReminderSchedule` 是 D 内部的持久化读模型，不是共享 Booking 状态。C 不需要依赖其中的调度状态；C 只需在预订创建成功后调用提醒服务，并在取消或改期事件明确后再增加对应命令。
+- 调用方 C 在 booking 创建成功后调用 `scheduleOneDayReminder`；取消时调用 `cancelOneDayReminder`；改期、改房型或改联系邮箱后再次调用 `scheduleOneDayReminder`，相同预订只有一条当前 revision。
+- 相同内容和未取消状态幂等返回原记录；内容变化会重置为 `PENDING`、清零尝试次数并写 `RESCHEDULED` 审计。
+- 状态：`PENDING → SENDING → SENT | PENDING(retry) | FAILED`，另有终态 `CANCELLED`。这些是通知内部状态，不是共享 Booking/Payment 状态机。
+- 发送认领使用 `status + version` 条件更新。两个实例同时处理时最多一个进入 `SENDING`。
+- 外发邮件发生在数据库事务之外；行本身作为 outbox 记录，先提交后发送。
+- 失败默认最多 3 次、间隔 15 分钟。持久化和日志只使用如 `SMTP_SEND_FAILED`、`EmailDeliveryException` 的错误类别，不写入 provider 原文、收件邮箱或游客资料。
+- 已发送后发生取消不会撤回邮件，只更新当前通知状态并保留审计；SENDING 与取消/改期竞争时采用至少一次投递语义，旧发送的 `markSent` 会因版本变化失败，新 revision 可再次发送。
 
-当前 `bookingReference` 是不透明字符串，最长 64 个字符。因为 Booking 表与主键尚未评审，`reminder_schedule` 不建立数据库外键，也不假定字符串就是最终 Booking 主键。联调时必须由 C/D 确认 Booking 标识、事件和幂等键。
+## 3. 邮件端口与配置
 
-## 调度规则
+默认 `MockEmailTransport` 只把消息保存在进程内，绝不发真实邮件。可选 profile：
 
-- 当前只实现 `ONE_DAY`，即 `remindOnDate = checkInDate - 1 day`。Q8 的三天前提醒仍属于设计演进范围，没有实现。
-- 入住日期必须晚于共享 `Clock` 当天的上海日期；入住日为明天时，提醒当天到期。
-- 数据库时间戳以 UTC `Instant` 写入；入住日期仍使用 `LocalDate` 和 Asia/Shanghai 业务日历。
-- `(booking_reference, reminder_kind)` 唯一，重复创建返回已有记录。如果同一预订和提醒类型对应的邮箱或入住日期不同，服务抛出 `CONFLICT`，不静默覆盖。
-- `PENDING → SENDING → SENT|PENDING|FAILED`。发送失败时，未达到最大尝试次数则回到 `PENDING` 并设置 `nextAttemptAt`；达到上限则进入 `FAILED`。
-- 发送认领使用 `status + version` 条件更新，两个实例同时处理时最多一个能认领。
-- 邮件调用位于数据库事务之外，避免第三方延迟长期占用数据库锁。
+```powershell
+$env:SPRING_MAIL_HOST='smtp.example.test'
+$env:SPRING_MAIL_PORT='587'
+$env:SPRING_MAIL_USERNAME='...'
+$env:SPRING_MAIL_PASSWORD='...'
+$env:NOTIFICATION_FROM_ADDRESS='booking@example.test'
+.\scripts\maven.ps1 spring-boot:run -Dspring-boot.run.profiles=dev,smtp-email
+```
 
-## 配置
+源码、YAML 和测试均不保存真实用户名、密码或收件人。`live-email` profile 仍故意没有可用适配器，不能把未配置状态伪造成发送成功。
 
 ```yaml
 notification:
@@ -52,43 +65,89 @@ notification:
   max-attempts: 3
   retry-delay: 15m
   dispatch-interval-ms: 60000
+  send-hour: 9
+  from-address: no-reply@example.invalid
 ```
 
-默认关闭定时派发，避免本地开发、测试或课堂演示误发邮件。启用后仍使用 `MockEmailTransport`，除非团队另行实现并评审 live provider。`live-email` profile 当前故意没有可用 adapter，不能把它当作已接入阿里云 DirectMail。
+定时派发默认关闭。启用 `notification.dispatch-enabled=true` 后才会周期性执行 `dispatchDue`。
 
-## 明确未完成
+## 4. 版本化数据库 schema
 
-- 没有实现真实邮件供应商、凭据管理、退信处理或生产配额控制。
-- 没有实现 Q8 CR3 的三天前和一天前双提醒。
-- 没有创建 Booking、Payment、Room、Member 或跨模块事务表。
-- 没有实现取消、改期或 Booking 状态变化触发提醒重调度；需要 C/D 先确认事件和幂等语义。
-- 没有完成真实用户测试、MySQL 实例验证、同一版本系统截图或最终 Q5/Q7 证据。
-- 新增测试必须实际执行后才能写入 Test Report；本文件不把待执行测试当作已通过结果。
+Flyway 迁移：
 
-## 联调待确认
+| 版本 | 内容 |
+| --- | --- |
+| `V1` | `reminder_schedule` 初始提醒表和唯一键 |
+| `V2` | `room_type`, `room`, `room_block`, 房间与价格审计 |
+| `V3` | `customer`, `staff_account`, `membership` |
+| `V4` | `booking`, 房间分配/逐夜占用、`payment`, 支付事件 |
+| `V5` | 提醒的退房日期、房型、计划发送时间和提醒事件审计 |
+| `V6` | `persistence_lock` 固定锁序 |
+| `V7` | 初始三个房型和八个房间目录 |
 
-1. C 提供的 Booking 稳定标识、创建成功事件、取消事件和改期事件。
-2. 收件邮箱从 Customer 还是 Booking 快照取得；邮箱变更是否影响已排程提醒。
-3. 提醒发送日是否固定为某个本地时刻，还是当天任意时间由调度器处理。
-4. 真实邮件供应商、发件地址、配额、重试上限和审计要求。
-5. Q8 三天前提醒的触发规则、去重键和取消/改期重排规则。
+关键约束：
 
-## 2026-10-29 实际验证
+- `room.id` 为主键，天然保证房号唯一。
+- `customer.email_normalized` 唯一，并由 `CHECK` 要求小写；A 必须用 trim + lowercase 生成该值。
+- `booking_room_night(room_id, stay_date)` 主键从数据库层阻止同一房间同夜重复分配，不依赖 MySQL 独有 exclusion constraint。
+- `payment.idempotency_key` 唯一；`BOOKING` 支付必须有 booking，`MEMBERSHIP` 支付必须独立于 booking。
+- 金额全部为整数分并有正数/范围检查；日期使用 `LocalDate`；时间戳使用 UTC Instant。
+- 房型价格、房间状态、提醒、支付均保留事件审计；应用不提供物理删除。
+- `reminder_schedule` 保留既有表名以保护已发布的 `V1` checksum，语义对应设计中的 `reminder` 表。
 
-环境：Windows、Temurin JDK 17.0.20.1、Maven 3.9.11，项目本地 Maven 缓存。
+## 5. Room JDBC 适配
+
+`JdbcRoomInventoryRepository` 实现 B 的 `RoomInventoryEditor`：
+
+- `readSnapshot` 在 repeatable-read 事务中读取房型、房间、手工 block 与未释放的 booking allocation。
+- `updateSnapshot` 先锁定 `ROOM_INVENTORY`，再读取当前快照、执行 B 的校验函数并写回。
+- 房间首次创建、房型/状态变化和价格变化写审计表；不删除历史行。
+- 并发唯一键冲突转换为 `RoomInventoryConflictException`，由 B 的服务映射为可读 409。
+- Booking 占用只能由 C 通过 allocation 表和统一锁释放，不能借 B 的 Room 更新端口改写。
+
+MySQL/H2 共用的锁入口：
+
+```java
+locks.lockRoomInventory(); // room inventory
+locks.lockBooking();       // room inventory -> booking
+locks.lockPayment();       // room inventory -> booking -> payment
+```
+
+调用者必须已经开启数据库事务。任何跨模块事务都不得反向获取锁。
+
+## 6. 测试与 CI
+
+Windows：
+
+```powershell
+.\scripts\test.ps1
+```
+
+Linux/macOS：
+
+```sh
+./scripts/test.sh
+```
+
+CI 位于 `.github/workflows/ci.yml`，使用 Temurin JDK 17，执行 `clean verify` 并保留 Surefire 与 JaCoCo 报告。JaCoCo 当前总行覆盖率门槛为 90%，BUNDLE 报告用于课程证据时必须附实际运行环境。
+
+## 7. 2026-11-07 实际验证
+
+环境：Windows、Temurin JDK 17.0.20.1、Maven Wrapper 3.9.11、项目本地依赖缓存。
 
 ```powershell
 $env:JAVA_HOME = '<project>/.cache/jdk17/extracted/jdk-17.0.20.1+1'
 .\scripts\maven.ps1 --batch-mode --no-transfer-progress verify
 ```
 
-结果：`BUILD SUCCESS`，230 项测试，0 failures、0 errors、0 skipped；Flyway 在 H2 测试库成功应用 `V1`。JaCoCo 总行覆盖率 95.05%，通知包行覆盖率 86.72%，`BUNDLE` 行覆盖率门槛 70% 通过。报告位于 `target/site/jacoco/index.html`。
+结果：`BUILD SUCCESS`；245 tests，0 failures，0 errors，0 skipped；Flyway 在全新 H2 数据库成功应用 7 个迁移；JaCoCo 总行覆盖率 91.59%，90% BUNDLE 门槛通过。另以默认 `dev` profile 启动打包 JAR 到 127.0.0.1:18080，`/actuator/health` 返回 `UP` 后正常停止进程。D 相关当前测试为提醒服务 6、SMTP 适配器 2、提醒 JDBC 4、schema 契约 4、Room JDBC 3、锁 3、clean reset 1；全项目测试总数由原 230 项扩展/替换为 245 项。
 
-本机工程路径包含非 ASCII 字符，JaCoCo 执行文件改写到系统临时目录，再由报告阶段读取；报告和测试输出仍在 `target/`。这是本机路径兼容处理，不改变测试覆盖口径。
+## 8. 明确未完成与联调条件
 
-尚未验证：MySQL 8 实例、真实邮件 provider、跨模块 Booking → Reminder 调用、进程崩溃后的 `SENDING` 租约恢复、provider 幂等。当前按至少一次投递设计，邮件发送成功后若本地状态更新失败，可能重复发送。
-
-## 测试覆盖
-
-- `ReminderServiceTest`：一天前日期计算、输入校验、幂等冲突、成功派发、失败重试和终止状态。
-- `JdbcReminderRepositoryTest`：Flyway 建表、唯一键幂等、到期查询、原子认领、发送完成、失败重试和终态。
+- 未运行真实 MySQL 8 实例；SQL 已按 H2/MySQL 兼容语法编写并由 H2 验证，但最终仍需 MySQL 8 集成证据。
+- 未向真实 SMTP 服务发信；SMTP 适配器存在，Mock 是默认且唯一未经外部验证的默认路径。
+- A 的 Customer/Member repository 端口和 C 的 Booking/Payment repository 端口尚未评审。D 不越权定义其领域对象或状态机，因此对应 JDBC adapter 待这些端口冻结后实现；表与约束已就绪。
+- C 必须在创建、取消、改期事务成功后接入 `NotificationService`；不能把定时派发当作 booking 业务触发器。
+- Q8 的三天前提醒属于设计演进，不在本轮。
+- 进程崩溃后长期停留在 `SENDING` 的租约恢复、provider 幂等和退信处理仍需后续实现。
+- CI 文件已建立但尚未在 GitHub 远端实际运行；本机结果不能替代远端 CI 证据。

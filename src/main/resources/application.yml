@@ -42,3 +42,5 @@ notification:
   max-attempts: 3
   retry-delay: 15m
   dispatch-interval-ms: 60000
+  send-hour: ${NOTIFICATION_SEND_HOUR:9}
+  from-address: ${NOTIFICATION_FROM_ADDRESS:no-reply@example.invalid}

@@ -11,13 +11,17 @@ import java.util.Optional;
 /** D-owned persistence port for reminder scheduling and dispatch state. */
 public interface ReminderRepository {
 
-    ReminderSchedule insertIfAbsent(ReminderDraft draft);
+    /** Inserts a revision or atomically replaces a changed current revision. */
+    ReminderSchedule upsert(ReminderDraft draft);
 
     Optional<ReminderSchedule> findById(long id);
 
     Optional<ReminderSchedule> findByBookingReferenceAndKind(String bookingReference, ReminderKind kind);
 
     List<ReminderSchedule> findDue(Instant now, LocalDate throughDate, int limit);
+
+    /** Cancels future delivery and returns whether a schedule existed. */
+    boolean cancelByBookingReference(String bookingReference, Instant updatedAt);
 
     boolean claimForSending(long id, long expectedVersion, Instant now);
 
@@ -26,7 +30,7 @@ public interface ReminderRepository {
     boolean recordFailure(
             long id,
             long expectedVersion,
-            String error,
+            String errorCode,
             Instant nextAttemptAt,
             Instant updatedAt);
 }

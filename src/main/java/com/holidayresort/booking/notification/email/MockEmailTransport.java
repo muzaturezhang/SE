@@ -5,9 +5,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-/** Default local adapter. It records messages and never contacts a real mailbox. */
+/** Safe default adapter. It records messages and never contacts a real mailbox. */
 @Component
-@Profile("!live-email")
+@Profile("!smtp-email & !live-email")
 public class MockEmailTransport implements EmailTransport {
 
     private final List<EmailMessage> sentMessages = new CopyOnWriteArrayList<>();

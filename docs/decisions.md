@@ -66,3 +66,14 @@ staff-booking-ui独立可选，dev-ui.sh显式启用；默认与dev-staff.sh默�
 邮件调用放在数据库事务之外。发送认领用 `status + version` 条件更新，失败可延迟重试，达到配置上限后进入 `FAILED`。定时派发默认关闭，避免本地开发误发；启用时仍使用 `MockEmailTransport`，除非 live adapter 经团队评审后另行接入。
 
 验证：Windows + Temurin JDK 17.0.20.1 + Maven 3.9.11，`scripts/maven.ps1 --batch-mode --no-transfer-progress verify` 为 BUILD SUCCESS，230 tests / 0 failures / 0 errors / 0 skipped，JaCoCo 总行覆盖率 95.05%，70% 门槛通过。尚未验证 MySQL 8、live email、Booking → Reminder 联调或崩溃后的 SENDING 租约恢复。
+
+## 2026-11-07：D 通知与持久化完整实现
+
+- 提醒发送时间固定为上海时区入住日前一天 09:00，可通过 `notification.send-hour` 调整；到期判断使用 UTC `Instant`，业务日期仍用上海 `LocalDate`。
+- `NotificationService.scheduleOneDayReminder` 采用当前 revision 的幂等 upsert。相同内容不重复写入；改期、退房日期、房型或邮箱变化时自动重排并写不含 PII 的提醒审计。
+- 取消以 `CANCELLED` 终态保留历史，不物理删除。发送认领和终态更新使用 `status + version` 条件更新；外发在事务之外。
+- 默认 Mock 邮件；新增可选 `smtp-email` SMTP adapter，所有主机和凭据只来自环境变量。`live-email` 仍无适配器，启动失败优于伪发送。
+- Flyway 新增 V2–V7：Room、Member、Booking、Payment、提醒审计、统一锁表和初始房型目录。`reminder_schedule` 保留名称以保护已发布 V1 checksum。
+- `booking_room_night(room_id, stay_date)` 主键在 DB 层保证同一房间不能重复占用同一夜，避免依赖 MySQL 专有 exclusion constraint。
+- 锁表使用 `ROOM_INVENTORY → BOOKING → PAYMENT` 固定顺序；B 的 JDBC Room adapter 已接入，C/A 的事务必须复用该入口。
+- A/C repository 端口未冻结前不代写其领域服务或 adapter。D 只提供 schema、锁、通知与 Room 持久化实现。

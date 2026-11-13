@@ -220,3 +220,36 @@ DispatchResult dispatchDue();
 - 定时派发默认关闭；启用后仍需确认真实 provider、发送时间和重试上限。
 - Flyway `V1__create_reminder_schedule.sql` 只创建 `reminder_schedule`，不创建其他模块表。跨模块 schema 仍需 B/C/D 评审。
 - C 取消或改期后的提醒重排尚未实现；Q8 CR3 的三天前提醒也尚未实现。这两项不得在 Stage 4 报告中写成已完成。
+
+## 2026-11-07：D 通知、持久化与锁落地
+
+Owner：D。依据 Stage 2 DS 第 6–7 节，已实现通知端口、Room 持久化适配、完整业务 schema、统一锁序与测试基础设施。A/C 的业务 repository 端口仍未冻结；D 未在 `member`、`booking` 或 `payment` 包内代写其领域对象、状态机或服务规则。
+
+```java
+interface NotificationService {
+    ReminderSchedule scheduleOneDayReminder(ReminderRequest request);
+    boolean cancelOneDayReminder(String bookingReference);
+    DispatchResult dispatchDue();
+}
+record ReminderRequest(String bookingReference, String recipientEmail,
+                       LocalDate checkInDate, LocalDate checkOutDate,
+                       String roomTypeName) {}
+```
+
+- 提醒按 Asia/Shanghai 的入住日前一天 09:00 计划发送；`send-hour` 可配置。
+- `scheduleOneDayReminder` 对相同内容幂等；C 在改期/改房型/改邮箱后再次调用即可自动重排，并保留审计事件。
+- C 在取消成功后调用 `cancelOneDayReminder`。取消、改期调用发生在 C 的业务事务成功之后；通知行本身是 outbox。
+- 失败只保存/记录错误类别，不保存 provider 原文、邮箱或游客资料。默认 Mock；`smtp-email` profile 才启用 SMTP。
+- `reminder_schedule` 名称沿用 V1，语义即 DS 的 `reminder`；未建 booking FK，因为 C 的标识和生命周期尚未冻结，联调时必须确认。
+
+```java
+// D-owned, caller must already be in a transaction
+void lockRoomInventory();
+void lockBooking();  // ROOM_INVENTORY -> BOOKING
+void lockPayment();  // ROOM_INVENTORY -> BOOKING -> PAYMENT
+```
+
+- `JdbcRoomInventoryRepository` 实现 B 的 `RoomInventoryEditor`，仅在 `mysql` profile 替换内存适配器。
+- V1–V7 schema 已覆盖 room/member/booking/payment/reminder 与审计表；`booking_room_night(room_id, stay_date)` 主键在 DB 层防止重复占用。
+- `email_normalized` 唯一、房号主键、支付幂等键唯一；金额为整数分。
+- A/C 的 JDBC adapter 待其 repository 端口冻结后由 D 补实现；不能从 D 的 schema 反向冻结 A/C 状态机。

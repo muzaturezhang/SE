@@ -1,8 +1,21 @@
 # 当前交接
 
-更新时间：2026-10-30，Asia/Shanghai。B第一批Room查询、第二批房间管理、第三批预订流程UI、第四批账户/会员UI、第五批工作人员预订只读UI均已完成本地实现与开发验证。设计整理已新增Room类图/CRC、导航、查询交互、UI原则与团队接入材料。真实身份、Booking/Payment、会员规则和数据库仍未接入。
+更新时间：2026-11-07，Asia/Shanghai。B 的五批 Room/UI 本地实现与 D 的通知、持久化、MySQL/H2 schema、Room JDBC 适配、统一锁序和测试基础设施均已完成本地验证。真实身份、Booking/Payment 服务与会员规则仍未接入；MySQL 8 和真实 SMTP 尚未做外部实例验证。
 
-## D 通知与持久化基础 2026-10-29
+## D 通知与持久化完整实现 2026-11-07
+
+用户基于新版 RS/DS 要求完成 D 的工作。本轮在 `codex/d-foundation` 完成：
+
+- Flyway V1–V7：提醒、Room、Member、Booking、Payment、审计事件、统一锁表与初始房型目录。
+- `NotificationService`：上海时区一天前 09:00 提醒、幂等 revision、改期自动重排、取消、有界重试、版本化发送认领与隐私安全错误码。
+- 邮件端口：默认 Mock；可选 `smtp-email` profile，通过 `SPRING_MAIL_*` 与 `NOTIFICATION_FROM_ADDRESS` 环境配置，不在源码保存凭据。
+- `JdbcRoomInventoryRepository`：事务内统一锁序、原子快照替换、价格/状态审计、booking allocation 合并读、并发冲突映射。
+- 测试基础设施：`.github/workflows/ci.yml`、`scripts/test.ps1`、H2 全量 schema 契约测试、JaCoCo BUNDLE 90% 门槛。
+
+实际验证：Windows、Temurin JDK 17.0.20.1、Maven 3.9.11；`.\scripts\maven.ps1 --batch-mode --no-transfer-progress verify` 为 `BUILD SUCCESS`；245 tests / 0 failures / 0 errors / 0 skipped；Flyway 在全新 H2 schema 成功应用 7 个迁移；JaCoCo 总行覆盖率 91.59%，90% BUNDLE 门槛通过；打包 JAR 在 127.0.0.1:18080 启动后健康检查为 UP。
+
+仍未验证：真实 MySQL 8 实例、真实 SMTP provider、GitHub Actions 远端运行、Booking → Reminder 事件联调、SENDING 崩溃恢复、provider 幂等与退信。A/C repository 端口未冻结，因此其 JDBC adapter 仍待联调；D 已提供表、约束、锁和事务入口。详见 `docs/d-persistence-notification-foundation.md` 与 `log/2026-11-07-d-completion.md`。
+## D 通知与持久化基础 2026-10-29（历史）
 
 用户确认承担 D 的工作后，本轮在本地分支 `codex/d-foundation` 增加 Flyway、`V1__create_reminder_schedule.sql`、JDBC 提醒仓储、一天前提醒服务、provider-neutral 邮件端口、默认 Mock 邮件适配器、opt-in 调度器和 JaCoCo 报告/70% 行覆盖率门槛。没有创建 Booking/Payment/Room/Member 业务表，没有接入真实邮件供应商，也没有实现 Q8 CR3 三天前提醒。
 
@@ -92,7 +105,7 @@ handoff/B-team-integration.md按A/C/D列输入、R01..R07评审问题和未来�
 1. 已完成当前源码对应的Room class diagram/CRC、页面导航、availability interaction、逐页原则和接口交接草案。下一步按B-team-integration.md的R01..R07由各owner评审，修改草案并准备真实联调；正式Q3/Q4仍需同版本集成证据。
 2. A提供真实账号/密码策略、CUSTOMER/STAFF Session、本人资料和会员资格/费用/权益/有效期；C接会员付款。当前账户UI不认证。
 3. A/C评审客户/工作人员Gateway：真实主体与Service授权、归属/员工数据范围、报价/快照、创建幂等、列表分页/排序、独立状态、联系字段/房号、错误映射。不能只换Mock Bean就宣称真实集成；匿名客户preview不能接真实数据。
-4. C/D补Booking事务内复核/分配/占用/释放、支付创建/回调/核对、与Room统一锁策略；D实现MySQL读写/schema/迁移。mysql仍缺业务端口而拒绝启动。
+4. C 补 Booking 事务内复核/分配/占用/释放、支付创建/回调/核对，并复用 D 的 `ROOM_INVENTORY → BOOKING → PAYMENT` 锁入口。D 的 V1–V7 schema、Room JDBC 适配和迁移已完成；A/C 的 repository 端口冻结后再补其 JDBC adapter，并在真实 MySQL 8 联调。
 5. 工作人员变更状态/支付核对按钮保持禁用；取消/改期、3天/1天提醒Q8仍待确认实现范围。没有邮件/扣款/自动过期业务。
 6. 正式RS/DS/TR、Q3/Q4、统一build四核心功能截图、真实用户研究、真实200%缩放/读屏、Windows/MySQL、CI/JaCoCo、Git提交/远程/tag仍未完成；Java17与本机干净解压构建已完成。不要声称全系统已最终验收。
 
