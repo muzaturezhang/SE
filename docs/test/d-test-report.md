@@ -68,6 +68,14 @@ The coverage rule is enforcing a 90% bundle line threshold. Branch coverage is r
 5. Provider-level idempotency and delivery receipt/bounce processing are not available with the current sandbox/Mock provider.
 6. User testing, screenshots and Q5/Q7 evidence require real participants and must not be inferred from this report.
 
+## 6. CI evidence
+
+- Push run [43890784432](https://github.com/muzaturezhang/SE/actions/runs/43890784432): Java 17 verification PASS; MySQL 8 integration PASS; 0 annotations.
+- PR run [43890798856](https://github.com/muzaturezhang/SE/actions/runs/43890798856): Java 17 verification PASS; MySQL 8 integration PASS; 0 annotations.
+- Real MySQL job now exercises booking creation/idempotency, payment callback/idempotency, reminder creation/cancellation and release history, not only migrations.
+
+## 7. Conclusion
+
 ## 6. Conclusion
 
 D's persistence and reminder foundation is wired through the merged A/B/C code, and the real MySQL 8 CI check is green. The remaining external/scope items are live SMTP testing, C's cancellation/change implementation, membership-fee payment orchestration and Q5/Q7 user testing.

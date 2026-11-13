@@ -30,3 +30,10 @@
 ## 未伪造内容
 
 本轮没有创建参与者、截图、quote、任务完成时间或用户测试结果。Q5/Q7 只准备执行协议，真实 evidence 必须由实际 session 产生。
+
+
+## 真实 MySQL 生命周期 CI
+
+- Push run 43890784432：Java 17 verification、MySQL 8 integration 均成功。
+- PR run 43890798856：Java 17 verification、MySQL 8 integration 均成功。
+- MySQL job 在真实 MySQL 8 上执行 booking/payment/reminder/release 生命周期，0 annotations。
