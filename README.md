@@ -1,6 +1,15 @@
 # Holiday Resort Booking System
 
-团队共享的 Web 工程。当前提供 Spring Boot 骨架、安缦参考方向的客户界面，以及 B 的房型浏览、可用性查询、STAFF 房间管理和可选的预订流程、账户与会员 UI 演示。房型、基础价、日期占用与可用数量默认来自内存样例数据；D 已补齐版本化持久化 schema、Room 的 MySQL/H2 JDBC 适配、一天前提醒、取消/改期重排、SMTP 端口、统一锁顺序与 CI/JaCoCo 验证。A/C 的认证、Booking/Payment 服务已进入共享代码；D 已补齐 H2/MySQL JDBC adapter、事务边界和 Booking→Reminder 联动。B 的若干页面仍保留独立 preview 路由，最终 UI 联调需以真实服务为准。
+团队共享的 Holiday Resort 预订 Web 工程，基于 Java 17、Spring Boot、Thymeleaf、H2/MySQL 8。当前正式客户流程已包含注册/登录、客房查询、实时报价、下单与库存占用、我的预订、改期、取消、sandbox 支付和会员费支付；正式 STAFF 流程已包含房间管理、真实预订列表/详情、筛选分页和支付结果核对。D 提供版本化 Flyway schema、H2/MySQL JDBC adapter、统一锁顺序、提醒/邮件端口、CI、JaCoCo 和可重复测试。B/A/C 的独立 preview 路由仍保留用于界面演示，但不再代表正式业务闭环。用户测试和外部邮箱投递仍需真实参与者和外部环境，仓库不会伪造这些证据。
+
+## 当前正式功能
+
+- 客户：`/account/register`、`/account/login`、`/stays/new`、`/stays`、`/stays/{reference}`，支持服务端报价、幂等下单、改期、取消、支付和会员费支付。
+- STAFF：`/admin/rooms`、`/admin/stays`、`/admin/stays/{reference}`，支持真实预订筛选分页、房号与状态查看，以及 `UNDER_REVIEW` 支付的人工确认/拒绝。
+- 数据：默认 `dev` 使用 H2；`mysql` profile 使用 MySQL 8 与 Flyway V1–V8。正式金额始终由后端计算并保存价格快照。
+- 验证：`.\scripts\test.ps1` 执行完整测试、JAR 构建、JaCoCo 90% 行覆盖率闸门。最新工程结果为 338 项测试、0 失败、5 项本地 MySQL 环境跳过，GitHub Actions 双 Java 17/MySQL 8 任务通过。
+- 截图：正式客户与 STAFF 页面截图位于 `docs/screenshots/final-2026-11-14/`，含桌面和移动视口。
+- 证据边界：本地环回 SMTP 已实测；外部 SMTP/Mailtrap 投递和 Q5/Q7 用户测试尚未收集，不能作为已完成的真实验证报告。
 
 查询支持日期、房型和房间数量，并在后端校验输入、计算整个住期连续可用的房间。快速演示见 [房间查询与样例场景](docs/room-query-demo.md)。
 
@@ -55,7 +64,7 @@ Windows PowerShell：
 
 默认 `dev` 的所有修改在内存中，重启恢复初始样例；D 的 `mysql` profile 已提供事务化 Room JDBC 适配和版本化 schema。正式登录与 Booking/Payment JDBC adapter 已接入共享代码，B 的 preview 路由仍不等于真实页面验收。操作步骤见 [管理演示](docs/room-management-demo.md)。
 
-## 独立预览预订流程 UI
+## 独立预览预订流程 UI（保留）
 
 先停止旧服务，再执行：
 
@@ -65,7 +74,7 @@ Windows PowerShell：
 
 打开 <http://localhost:8080/preview/stays/new>。也可以在客房页查询日期和数量，点击结果中的“安排入住 · 演示”。页面包含入住确认、会话草稿详情、支付状态、我的预订和空状态。脚本同时保留本地 STAFF 管理预览。
 
-此入口仅在回环 `dev,local-staff,booking-ui,account-ui,staff-booking-ui` 环境启用。草稿只留在当前会话，不创建 Booking、不占库存或扣款；动态选择不计算最终总价，支付状态使用固定示例。正式认证、报价、订单和支付仍由 A/C 接入。步骤与接入清单见 [预订 UI 演示](docs/stay-ui-demo.md)。
+此入口仅在回环 `dev,local-staff,booking-ui,account-ui,staff-booking-ui` 环境启用。草稿只留在当前会话，不创建 Booking、不占库存或扣款；动态选择不计算最终总价，支付状态使用固定示例。正式流程请登录客户账户后访问 `/stays/new`。步骤与接入清单见 [预订 UI 演示](docs/stay-ui-demo.md)。
 
 ## 账户与会员 UI
 
@@ -73,9 +82,9 @@ Windows PowerShell：
 
 演示密码只做表单校验，不保存、不回显，不进行真实认证或授予权限。会员费、有效期规则与折扣留待 A/C 返回；开通/续费按钮不能付款。账户预览退出只清除自己的展示资料，不影响 STAFF 身份和预订草稿。详见 [账户演示](docs/account-ui-demo.md)、[B 的剩余交接清单](docs/b-handoff-checklist.md)。
 
-## 工作人员预订管理 UI
+## 工作人员预订管理（正式）
 
-同样使用 `./scripts/dev-ui.sh`，打开 <http://localhost:8080/admin/stays>，以本地 STAFF 身份登录。支持编号/入住日/状态组合筛选、详情与保留筛选的返回，以及房间/预订后台导航。记录为6条独立虚构样例，金额和状态只读；没有确认收款、取消/改期或库存释放。详见 [工作人员预订演示](docs/staff-stay-ui-demo.md)。默认开发环境不启用此入口。
+STAFF 登录后访问 <http://localhost:8080/admin/stays>。正式页面读取真实 Booking/Payment 数据，支持编号/入住日/预订状态组合筛选、20 条分页、房号与价格快照、独立展示预订/支付状态，并仅对 `UNDER_REVIEW` 支付开放“确认已付/拒绝”核对；拒绝原因需要 3–255 个字符。不会提供任意改金额、状态或库存的入口。STAFF 账号由环境配置预置，不通过公开注册创建。
 
 ## 正式账户与会员（A）
 
