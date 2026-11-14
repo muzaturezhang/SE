@@ -119,6 +119,35 @@ class MySqlProfileIntegrationTest {
                 """, Integer.class, held.reference())).isEqualTo(8);
     }
     @Test
+    void bookingChangeAndCancellationUpdateInventoryAndReminder() {
+        Customer customer = registration.register("Change Guest", "change@example.com", "safePass1");
+        LocalDate arrival = LocalDate.now(clock).plusDays(12);
+        Booking booking = bookings.createBooking(customer.id(), "courtyard", arrival, arrival.plusDays(2),
+                1, "Change Guest", "change@example.com", "idem-change-1");
+
+        Booking changed = bookings.change(customer.id(), booking.reference(), "courtyard",
+                arrival.plusDays(1), arrival.plusDays(3), 2);
+
+        assertThat(changed.reference()).isEqualTo(booking.reference());
+        assertThat(changed.roomCount()).isEqualTo(2);
+        assertThat(changed.allocatedRoomIds()).hasSize(2);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM booking_room_night WHERE booking_reference = ? AND stay_date >= ? AND stay_date < ?
+                """, Integer.class, booking.reference(), java.sql.Date.valueOf(arrival.plusDays(1)),
+                java.sql.Date.valueOf(arrival.plusDays(3)))).isEqualTo(4);
+        assertThat(reminders.findByBookingReferenceAndKind(booking.reference(), ReminderKind.ONE_DAY))
+                .hasValueSatisfying(reminder -> assertThat(reminder.checkInDate()).isEqualTo(arrival.plusDays(1)));
+
+        Booking cancelled = bookings.cancel(customer.id(), booking.reference());
+
+        assertThat(cancelled.status()).isEqualTo(BookingStatus.CANCELLED);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM booking_room_night WHERE booking_reference = ?
+                """, Integer.class, booking.reference())).isZero();
+        assertThat(reminders.findByBookingReferenceAndKind(booking.reference(), ReminderKind.ONE_DAY))
+                .hasValueSatisfying(reminder -> assertThat(reminder.status()).isEqualTo(ReminderStatus.CANCELLED));
+    }
+    @Test
     void adaptersPersistCustomerMembershipStaffAndPayment() {
         Customer customer = registration.register("Adapter Guest", "adapter@example.com", "safePass1");
         assertThat(members.findByEmail("ADAPTER@EXAMPLE.COM")).contains(customer);

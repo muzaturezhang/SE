@@ -55,6 +55,18 @@ public record Booking(
         }
     }
 
+    /**
+     * Returns a new snapshot for a date/room-type/count change while keeping
+     * the same booking reference and customer identity. Persistence ports
+     * retain the allocation history separately.
+     */
+    public Booking withChange(String newRoomTypeId, StayPeriod newStay, int newRoomCount,
+                              List<String> newAllocatedRoomIds, PriceSnapshot newPrice,
+                              BookingStatus newStatus, LocalDateTime newPaymentDeadline) {
+        return new Booking(reference, idempotencyKey, customerId, guestName, guestEmail,
+                newRoomTypeId, newStay, newRoomCount, newAllocatedRoomIds, newPrice,
+                newStatus, createdAt, newPaymentDeadline);
+    }
     public Booking withStatus(BookingStatus newStatus) {
         return new Booking(reference, idempotencyKey, customerId, guestName, guestEmail,
                 roomTypeId, stay, roomCount, allocatedRoomIds, price, newStatus, createdAt, paymentDeadline);

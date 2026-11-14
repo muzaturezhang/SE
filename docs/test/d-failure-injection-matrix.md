@@ -17,5 +17,5 @@ Status: internal engineering trace. `PASS` means an automated test or successful
 | MySQL migration and persistence lifecycle on real server | Apply V1–V8, seed, and exercise booking/payment/reminder/release persistence | GitHub Actions MySQL 8 jobs | PASS |
 | Concurrent bookings competing for limited rooms on real MySQL | Exactly one booking succeeds and no partial over-allocation is persisted | `MySqlLiveIntegrationTest.concurrentBookingCompetitionAllowsExactlyOneWinner`; CI runs 43892676670 / 43892690685 | PASS |
 | Real SMTP provider, bounce and quota | Provider-specific delivery evidence | None yet | NOT TESTED |
-| Cancellation/date-change event integration | Reschedule/cancel reminder through C's real event path | Listener unit/integration coverage exists; C service path incomplete | PARTIAL — blocked by C scope |
+| Cancellation/date-change event integration | Release/reallocate inventory and cancel/reschedule the reminder | `BookingServiceTest`, `MySqlProfileIntegrationTest`, `MySqlLiveIntegrationTest` | PASS |
 | Membership fee payment | Separate payment, then idempotent `confirmPayment` | Schema/adapter only | NOT IMPLEMENTED IN C |

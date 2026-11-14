@@ -97,3 +97,12 @@ staff-booking-ui独立可选，dev-ui.sh显式启用；默认与dev-staff.sh默�
 - V1–V7 已作为迁移 checksum 基线保留；新增字段和审计表放入 V8，不重写旧迁移。
 - `mysql` profile 使用 JDBC adapter；`dev`/`test` 保留内存 adapter。SandboxPaymentProvider 只用于非生产/CI，真实 provider 仍需后续接入。
 - JaCoCo 90% 总行门槛保留；测试报告同时列出实际分支覆盖率和 environment-gated skip，避免只看总行数字。
+
+## 2026-11-14：取消/改期规则冻结
+
+- `CANCELLED` 加入 Booking 终态；`PAID` 在入住前可以取消，退款只作为外部流程记录，不伪造已退款。
+- `PENDING` 允许改期并重新报价；`PAID` 只允许总价不变的安全改期。价格变化必须取消后重新预订，避免二次扣款。
+- 改期必须经过 `BookingInventoryPort.change`，在同一事务释放旧库存、重新检查并分配新库存。
+- 改期/取消必须校验 authenticated customer 的 Booking 归属。
+- 改期成功后 Reminder 必须按新入住日重排；取消后 Reminder 必须取消。
+- 生产 UI 仍需接入这两个 service 方法；当前先冻结 service 级规则和持久化测试。

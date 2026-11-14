@@ -107,6 +107,24 @@ class MySqlLiveIntegrationTest {
         }
     }
     @Test
+    void mysqlEightExercisesBookingChangeAndCancellation() {
+        Customer customer = registration.register("Live Change", "live-change@example.com", "safePass1");
+        LocalDate arrival = LocalDate.now(clock).plusDays(50);
+        Booking booking = bookings.createBooking(customer.id(), "courtyard", arrival, arrival.plusDays(2),
+                1, "Live Change", "live-change@example.com", "live-change-idem-1");
+
+        Booking changed = bookings.change(customer.id(), booking.reference(), "courtyard",
+                arrival.plusDays(1), arrival.plusDays(3), 2);
+        assertThat(changed.roomCount()).isEqualTo(2);
+        assertThat(changed.allocatedRoomIds()).hasSize(2);
+
+        Booking cancelled = bookings.cancel(customer.id(), booking.reference());
+        assertThat(cancelled.status()).isEqualTo(BookingStatus.CANCELLED);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM booking_room_night WHERE booking_reference = ?
+                """, Integer.class, booking.reference())).isZero();
+    }
+    @Test
     void mysqlEightExercisesBookingPaymentReminderAndReleaseLifecycle() {
         Customer customer = registration.register("Live Guest", "live-guest@example.com", "safePass1");
         LocalDate arrival = LocalDate.now(clock).plusDays(20);

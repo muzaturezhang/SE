@@ -13,5 +13,6 @@ class BookingStatusTest {
         assertThat(BookingStatus.PAID.isTerminal()).isTrue();
         assertThat(BookingStatus.FAILED.isTerminal()).isTrue();
         assertThat(BookingStatus.EXPIRED.isTerminal()).isTrue();
+        assertThat(BookingStatus.CANCELLED.isTerminal()).isTrue();
     }
 }

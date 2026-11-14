@@ -78,6 +78,25 @@ class BookingReminderEventListenerTest {
                 .isInstanceOf(NotificationException.class);
     }
 
+    @Test
+    void changedBookingSchedulesUpdatedReminder() {
+        Booking booking = booking(BookingStatus.PENDING, LocalDate.now().plusDays(5));
+
+        listener.onBookingLifecycle(new BookingLifecycleEvent(
+                BookingLifecycleEvent.Type.CHANGED, booking, "泳池别墅"));
+
+        verify(notifications).scheduleOneDayReminder(any());
+    }
+
+    @Test
+    void cancelledBookingCancelsReminder() {
+        Booking booking = booking(BookingStatus.CANCELLED, LocalDate.now().plusDays(3));
+
+        listener.onBookingLifecycle(new BookingLifecycleEvent(
+                BookingLifecycleEvent.Type.STATUS_CHANGED, booking, null));
+
+        verify(notifications).cancelOneDayReminder("BOOK-TEST");
+    }
     private static Booking booking(BookingStatus status, LocalDate arrival) {
         return new Booking("BOOK-TEST", "idem-test", "CUST-1", "Guest", "guest@example.com",
                 "courtyard", new StayPeriod(arrival, arrival.plusDays(2)), 1,

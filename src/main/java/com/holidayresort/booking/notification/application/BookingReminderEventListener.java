@@ -32,12 +32,14 @@ public class BookingReminderEventListener {
     public void onBookingLifecycle(BookingLifecycleEvent event) {
         Booking booking = event.booking();
         if (event.type() == BookingLifecycleEvent.Type.CREATED
+                || event.type() == BookingLifecycleEvent.Type.CHANGED
                 || booking.status() == BookingStatus.PAID) {
             schedule(booking, event.roomTypeName());
             return;
         }
         if (booking.status() == BookingStatus.FAILED
-                || booking.status() == BookingStatus.EXPIRED) {
+                || booking.status() == BookingStatus.EXPIRED
+                || booking.status() == BookingStatus.CANCELLED) {
             notifications.cancelOneDayReminder(booking.reference());
         }
     }
