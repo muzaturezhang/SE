@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('工作人员预订详情')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+<nav th:replace="~{fragments/layout :: staffNav}"></nav>
+<main id="main-content" tabindex="-1" class="admin-main staff-stay-main">
+  <a class="text-link admin-back" th:href="@{/admin/stays(reference=${referenceFilter},arrival=${arrivalFilter},state=${stateFilter},page=${page})}">← 返回预订清单</a>
+  <p class="admin-success" role="status" th:if="${staffMessage}" th:text="${staffMessage}"></p>
+  <p class="admin-errors" role="alert" th:if="${staffError}" th:text="${staffError}"></p>
+  <div class="stay-page-heading"><p class="section-label" th:text="${entry.booking.reference()}"></p><h1>预订详情</h1><div class="stay-state-row"><span class="stay-state" th:classappend="${'state-' + #strings.toLowerCase(entry.booking.status().name())}" th:text="${entry.bookingStatusLabel}"></span><span class="stay-state" th:classappend="${entry.payment != null ? 'state-' + #strings.toLowerCase(entry.payment.status().name()) : 'state-none'}" th:text="'支付：' + ${entry.paymentStatusLabel}"></span></div></div>
+  <div class="staff-stay-detail-grid">
+    <section class="staff-stay-panel" aria-labelledby="stay-title"><p class="section-label">STAY DETAILS</p><h2 id="stay-title">入住安排</h2><dl class="stay-facts"><div><dt>预订编号</dt><dd th:text="${entry.booking.reference()}"></dd></div><div><dt>房型</dt><dd th:text="${entry.roomTypeName}"></dd></div><div><dt>入住 / 退房</dt><dd><span th:text="${entry.booking.stay().arrival()}"></span><br><span th:text="${entry.booking.stay().departure()}"></span></dd></div><div><dt>数量 / 晚数</dt><dd th:text="${entry.booking.roomCount()} + ' 间 / ' + ${entry.booking.stay().nights()} + ' 晚'"></dd></div><div><dt>已分配房号</dt><dd th:text="${entry.allocatedRoomsLabel.isEmpty()} ? '尚未分配' : ${entry.allocatedRoomsLabel}"></dd></div><div><dt>创建时间</dt><dd th:text="${#temporals.format(entry.booking.createdAt(), 'yyyy-MM-dd HH:mm')}"></dd></div><div><dt>支付截止时间</dt><dd th:text="${entry.booking.paymentDeadline() != null} ? ${#temporals.format(entry.booking.paymentDeadline(), 'yyyy-MM-dd HH:mm')} : '不适用'"></dd></div></dl></section>
+    <section class="staff-stay-panel" aria-labelledby="guest-title"><p class="section-label">GUEST INFORMATION</p><h2 id="guest-title">住客资料</h2><dl class="stay-facts"><div><dt>入住人</dt><dd th:text="${entry.booking.guestName()}"></dd></div><div><dt>联系邮箱</dt><dd th:text="${entry.booking.guestEmail()}"></dd></div><div><dt>客户编号</dt><dd th:text="${entry.booking.customerId()}"></dd></div></dl><p class="stay-help">此页面仅用于已授权工作人员处理预订与支付核对。</p></section>
+    <section class="staff-stay-panel" aria-labelledby="payment-title"><p class="section-label">PAYMENT SNAPSHOT</p><h2 id="payment-title">费用与支付</h2><dl class="stay-facts"><div><dt>预订状态</dt><dd th:text="${entry.bookingStatusLabel}"></dd></div><div><dt>支付状态</dt><dd th:text="${entry.paymentStatusLabel}"></dd></div><div><dt>房费小计</dt><dd th:text="${entry.subtotalLabel}"></dd></div><div><dt>会员优惠</dt><dd th:text="${entry.discountAmountLabel}"></dd></div><div><dt>应付总额</dt><dd class="stay-total" th:text="${entry.totalLabel}"></dd></div><div th:if="${entry.payment != null}"><dt>支付参考号</dt><dd th:text="${entry.providerReference}"></dd></div><div th:if="${entry.failureReason != null and !entry.failureReason.isEmpty()}"><dt>失败 / 核对说明</dt><dd th:text="${entry.failureReason}"></dd></div></dl><p class="stay-help">金额来自订单价格快照，不接受页面输入。支付状态未知时，必须先核对支付服务结果。</p></section>
+    <section class="staff-stay-panel" aria-labelledby="actions-title"><p class="section-label">PAYMENT RECONCILIATION</p><h2 id="actions-title">支付结果核对</h2>
+      <div th:if="${canReconcile}">
+        <p class="staff-review-note">该支付处于待核对状态。确认或拒绝都会同步更新预订与库存状态，请依据支付服务结果操作。</p>
+        <div class="staff-stay-actions">
+          <form th:action="@{/admin/stays/{ref}/payment/confirm(ref=${entry.booking.reference()})}" method="post">
+            <input type="hidden" name="referenceFilter" th:value="${referenceFilter}"><input type="hidden" name="arrivalFilter" th:value="${arrivalFilter}"><input type="hidden" name="stateFilter" th:value="${stateFilter}"><input type="hidden" name="page" th:value="${page}">
+            <button class="solid-button" type="submit">确认支付成功</button>
+          </form>
+          <form th:action="@{/admin/stays/{ref}/payment/reject(ref=${entry.booking.reference()})}" method="post">
+            <input type="hidden" name="referenceFilter" th:value="${referenceFilter}"><input type="hidden" name="arrivalFilter" th:value="${arrivalFilter}"><input type="hidden" name="stateFilter" th:value="${stateFilter}"><input type="hidden" name="page" th:value="${page}">
+            <div class="admin-field"><label for="reason">拒绝原因</label><input id="reason" name="reason" type="text" minlength="3" maxlength="255" required placeholder="记录核对依据，不填写支付凭证"><p>3–255 个字符，仅用于内部审核。</p></div>
+            <button class="outline-button" type="submit">拒绝并标记支付失败</button>
+          </form>
+        </div>
+      </div>
+      <div th:unless="${canReconcile}">
+        <p class="stay-help">当前记录没有待核对的支付结果，因此没有可执行的付款操作。此页面不允许任意修改预订状态、金额或房间分配。</p>
+      </div>
+    </section>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

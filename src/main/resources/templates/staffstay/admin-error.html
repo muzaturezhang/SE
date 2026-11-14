@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('预订请求无法完成')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+<nav th:replace="~{fragments/layout :: staffNav}"></nav>
+<main id="main-content" tabindex="-1" class="admin-main staff-stay-main"><p class="section-label">RESERVATIONS</p><h1>预订记录未能显示</h1><p class="admin-errors" role="alert" th:text="${staffStayError}"></p><p class="admin-help">请返回清单重新选择，或检查筛选条件。</p><a class="text-link" th:href="@{/admin/stays}">← 返回预订清单</a></main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

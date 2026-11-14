@@ -79,12 +79,14 @@ class FoundationIntegrationTest {
     }
 
     @Test
-    void defaultEnvironmentDoesNotInstallStaffBookingFixtures() throws Exception {
+    void realStaffBookingRoutesReplacePreviewFixturesOutsidePreviewProfile() throws Exception {
         mvc.perform(get("/admin/stays")).andExpect(status().isForbidden());
         mvc.perform(get("/admin/stays").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
-                .user("staff").roles("STAFF"))).andExpect(status().isNotFound());
+                .user("staff").roles("STAFF"))).andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("本地 UI 演示"))))
+                .andExpect(content().string(containsString("STAFF 权限页面")));
         mvc.perform(get("/admin/rooms").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
-                .user("staff").roles("STAFF"))).andExpect(content().string(org.hamcrest.Matchers.not(containsString("href=\"/admin/stays\""))));
+                .user("staff").roles("STAFF"))).andExpect(content().string(containsString("href=\"/admin/stays\"")));
     }
 
     @Test

@@ -531,6 +531,9 @@ dialog::backdrop { background: #2228; }
 .staff-stay-actions { display: flex; flex-direction: column; gap: 15px; margin: 25px 0; align-items: flex-start; }
 .staff-stay-actions button { font-size: 12px; max-width: 100%; white-space: normal; }
 .staff-stay-actions button:disabled { color: #625d54; background: #eae3d9; border-color: #c8bfae; cursor: not-allowed; }
+.admin-pagination { display: flex; align-items: center; justify-content: center; gap: 22px; margin-top: 35px; font-size: 12px; }
+.staff-stay-actions form { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; width: 100%; }
+.staff-stay-actions .admin-field { width: 100%; max-width: 520px; margin: 0; }
 .staff-review-note { padding: 15px; background: #eae3d9; color: #675777; font-size: 12px; line-height: 2; }
 @media (max-width: 900px) {
   .staff-stay-row { gap: 22px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); }
