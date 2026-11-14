@@ -90,3 +90,23 @@ jobs:
           MYSQL_URL: jdbc:mysql://127.0.0.1:3306/resort?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
           MYSQL_USERNAME: root
           MYSQL_PASSWORD: root
+
+  docker-build:
+    name: Docker image build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build deployable image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: holiday-resort-booking:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
