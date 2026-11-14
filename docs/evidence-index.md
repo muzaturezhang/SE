@@ -1,6 +1,7 @@
 # Evidence Index — Integrated Engineering Verification
 
-Build: integrated `main` after PR #10, commit `22b06df`, 2026-11-14 Asia/Shanghai.
+Group 6: Nacy Lin, Muzature Zhang, Freya Wang, Mila Liu.
+Build: integrated `main` after PR #11, 2026-11-14 Asia/Shanghai.
 This index lists engineering evidence only. It does not claim external email delivery, Q5/Q7 user-test results, production operation or final course acceptance.
 
 | Evidence ID | Artifact | Verification | Status |

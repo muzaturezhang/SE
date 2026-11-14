@@ -1,6 +1,8 @@
 # Holiday Resort Booking System — Final Engineering Verification Report
 
 Date: 2026-11-14 (Asia/Shanghai)
+
+Group 6: Nacy Lin, Muzature Zhang, Freya Wang, Mila Liu.
 Status: engineering verification complete for the integrated repository; external SMTP delivery and Q5/Q7 user-test evidence are still pending and are not claimed as complete.
 
 ## 1. Environment
