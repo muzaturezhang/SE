@@ -38,6 +38,8 @@ Get-Content .\.cache\staff-preview\password.txt
 
 测试使用虚构姓名和 `@example.invalid` 邮箱。支付页面只连接 sandbox，不能输入真实银行卡或真实支付密码。停止服务时回到运行脚本的 PowerShell 窗口按 `Ctrl+C`。本地 H2 测试数据在脚本重启后保留；如需全新数据，可在服务停止后删除 `data/local/stage4-use.mv.db`。
 
+队友统一使用说明见 [Group 6 成品使用与测试说明](docs/group6-team-testing-guide.md)。
+
 查询支持日期、房型和房间数量，并在后端校验输入、计算整个住期连续可用的房间。快速演示见 [房间查询与样例场景](docs/room-query-demo.md)。
 
 ## B 本地交接版本
