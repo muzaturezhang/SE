@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.holidayresort.booking.member.application.port.StaffDirectory;
@@ -92,11 +93,33 @@ class MemberAccountWebTest {
                 .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/account/membership"));
         mvc.perform(get("/account/membership").session(session)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("待确认")))
-                .andExpect(content().string(containsString("等待支付服务确认")));
+                .andExpect(content().string(containsString("请完成会员费支付后生效")));
         mvc.perform(get("/account/membership/join").session(session).param("intent", "unknown"))
                 .andExpect(status().isBadRequest());
         mvc.perform(post("/account/membership/join").session(session).param("intent", "join"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void membershipPaymentSandboxActivatesMembershipAfterSuccess() throws Exception {
+        var session = customerSession("member-payment@example.invalid");
+        mvc.perform(post("/account/membership/join").session(session).with(csrf()).param("intent", "join"))
+                .andExpect(status().is3xxRedirection());
+        var payResult = mvc.perform(post("/account/membership/pay").session(session).with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("/sandbox/payments/*"))
+                .andReturn();
+        String paymentUrl = payResult.getResponse().getRedirectedUrl();
+        mvc.perform(get(paymentUrl).session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("模拟支付成功")))
+                .andExpect(content().string(containsString("会员年费")));
+        mvc.perform(post(paymentUrl + "/success").session(session).with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/account/membership"));
+        mvc.perform(get("/account/membership").session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("有效")));
     }
 
     @Test
