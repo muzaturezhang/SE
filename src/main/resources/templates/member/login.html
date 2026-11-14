@@ -11,7 +11,7 @@
     <section class="account-auth-panel" aria-labelledby="login-title"><p class="section-label">YOUR ACCOUNT</p><h2 id="login-title">账户登录</h2><p class="account-form-lead">登录后查看个人资料、会员状态与预订安排。工作人员使用同一入口登录管理后台。</p>
       <p class="admin-errors" role="alert" th:if="${param.error != null}">邮箱或密码不正确，请重新输入。</p>
       <form th:action="@{/account/login}" method="post" class="account-form" autocomplete="off">
-        <div class="admin-field"><label for="username">邮箱</label><input type="email" id="username" name="username" maxlength="254" required autocomplete="username"></div>
+        <div class="admin-field"><label for="username">邮箱或工作人员账号</label><input type="text" id="username" name="username" maxlength="254" required autocomplete="username" inputmode="email"></div>
         <div class="admin-field"><label for="password">密码</label><input type="password" id="password" name="password" maxlength="72" required autocomplete="current-password"></div>
         <button class="solid-button" type="submit">登录 <span aria-hidden="true">→</span></button>
       </form>

@@ -38,7 +38,9 @@ class MemberAccountWebTest {
     void loginPageIsPublicAndAccountPagesRequireAuthentication() throws Exception {
         mvc.perform(get("/account/login")).andExpect(status().isOk())
                 .andExpect(content().string(containsString("name=\"_csrf\"")))
-                .andExpect(content().string(containsString("账户登录")));
+                .andExpect(content().string(containsString("账户登录")))
+                .andExpect(content().string(containsString("邮箱或工作人员账号")))
+                .andExpect(content().string(containsString("type=\"text\" id=\"username\" name=\"username\"")));
         mvc.perform(get("/account/register")).andExpect(status().isOk());
         mvc.perform(get("/account")).andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("http://localhost/account/login"));
