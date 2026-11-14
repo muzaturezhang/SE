@@ -96,6 +96,10 @@ public class BookingService {
         if (normalizedKey != null) {
             var existing = bookings.findByIdempotencyKey(normalizedKey);
             if (existing.isPresent()) {
+                if (!existing.get().customerId().equals(customerId)) {
+                    throw new BookingException(Kind.CONFLICT, "idempotencyKey",
+                            "This request key has already been used.");
+                }
                 return existing.get();
             }
         }
@@ -133,6 +137,11 @@ public class BookingService {
 
     public List<Booking> listByCustomer(String customerId) {
         return bookings.findByCustomerId(customerId);
+    }
+
+    /** Customer-facing ownership boundary; unknown and foreign references both return 404 semantics. */
+    public Booking findForCustomer(String customerId, String reference) {
+        return findOwned(customerId, reference);
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)

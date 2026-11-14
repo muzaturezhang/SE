@@ -1,5 +1,6 @@
 package com.holidayresort.booking.web.stay;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -40,6 +41,11 @@ public class StayForm {
     public void setGuestName(String guestName) { this.guestName = guestName; }
     public String getGuestEmail() { return guestEmail; }
     public void setGuestEmail(String guestEmail) { this.guestEmail = guestEmail; }
+
+    @AssertTrue(message = "退房日期必须晚于入住日期。")
+    public boolean isStayPeriodValid() {
+        return arrival == null || departure == null || departure.isAfter(arrival);
+    }
 
     public StayPageGateway.Selection selection() {
         return new StayPageGateway.Selection(roomType, arrival, departure, rooms);

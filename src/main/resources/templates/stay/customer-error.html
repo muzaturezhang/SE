@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('预订请求无法完成')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('stay')}"></header>
+<nav th:replace="~{fragments/layout :: customerStayNav('list')}"></nav>
+<main id="main-content" tabindex="-1" class="stay-main">
+  <section class="stay-empty"><p class="section-label">REQUEST NOT COMPLETED</p><h1>预订请求无法完成</h1><div class="admin-errors" role="alert"><ul><li th:each="error : ${formErrors}" th:text="${error}"></li></ul></div><p>请返回预订列表后重试。若状态仍不明确，请勿重复支付并联系工作人员核对。</p><div class="stay-detail-actions"><a class="solid-button" th:href="@{/stays}">返回我的预订</a><a class="text-link" th:href="@{/account}">返回账户</a></div></section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

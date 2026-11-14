@@ -110,6 +110,19 @@ class BookingServiceTest {
     }
 
     @Test
+    void idempotencyKeyCannotBeReusedByAnotherCustomer() {
+        service.createBooking(customer.id(), "courtyard",
+                LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 17), 1,
+                "Zhang San", "zhangsan@example.com", "idem-owned");
+        assertThatThrownBy(() -> service.createBooking("different-customer", "courtyard",
+                LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 17), 1,
+                "Other Guest", "other@example.com", "idem-owned"))
+                .isInstanceOfSatisfying(BookingException.class,
+                        exception -> assertThat(exception.kind()).isEqualTo(Kind.CONFLICT));
+        assertThat(bookings.findAll()).hasSize(1);
+    }
+
+    @Test
     void createBookingFailsWhenNotEnoughRooms() {
         service.createBooking(customer.id(), "courtyard",
                 LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 17), 2,

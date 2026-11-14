@@ -1,0 +1,36 @@
+package com.holidayresort.booking.web.stay;
+
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
+
+public class StayChangeForm {
+    @NotBlank(message = "请选择房型。")
+    private String roomType;
+    @NotNull(message = "请选择入住日期。")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate arrival;
+    @NotNull(message = "请选择退房日期。")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate departure;
+    @NotNull(message = "请输入房间数量。")
+    @Min(value = 1, message = "房间数量必须为正整数。")
+    private Integer rooms;
+
+    public String getRoomType() { return roomType; }
+    public void setRoomType(String roomType) { this.roomType = roomType; }
+    public LocalDate getArrival() { return arrival; }
+    public void setArrival(LocalDate arrival) { this.arrival = arrival; }
+    public LocalDate getDeparture() { return departure; }
+    public void setDeparture(LocalDate departure) { this.departure = departure; }
+    public Integer getRooms() { return rooms; }
+    public void setRooms(Integer rooms) { this.rooms = rooms; }
+
+    @AssertTrue(message = "退房日期必须晚于入住日期。")
+    public boolean isStayPeriodValid() {
+        return arrival == null || departure == null || departure.isAfter(arrival);
+    }
+}

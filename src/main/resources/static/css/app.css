@@ -350,7 +350,12 @@ dialog::backdrop { background: #2228; }
 .stay-state.state-paid { color: #465a3c; border-color: #afb8a5; }
 .stay-state.state-failed { color: #793e30; border-color: #bd9c90; }
 .stay-state.state-expired, .stay-state.state-draft { color: var(--muted); border-color: var(--line); }
-.stay-state.state-review { color: #675777; border-color: #ada0b7; }
+.stay-state.state-review, .stay-state.state-under_review { color: #675777; border-color: #ada0b7; }
+.stay-state.state-cancelled, .stay-state.state-none { color: var(--muted); border-color: var(--line); }
+.stay-state-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.reservation-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 16px; }
+.reservation-actions form { margin: 0; }
+.reservation-actions .solid-button { min-height: 40px; padding: 9px 18px; }
 .reservation-entry { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr); gap: 4%; padding: 35px 0; border-top: 1px solid var(--line); align-items: center; }
 .reservation-entry:last-child { border-bottom: 1px solid var(--line); }
 .reservation-entry > img { width: 100%; height: 220px; object-fit: cover; }

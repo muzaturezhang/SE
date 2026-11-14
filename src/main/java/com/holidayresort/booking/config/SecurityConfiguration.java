@@ -34,6 +34,7 @@ public class SecurityConfiguration {
                 .requestMatchers("/", "/rooms", "/account/login", "/account/register",
                         "/css/**", "/js/**", "/images/**", "/vendor/**", "/error",
                         "/actuator/health", "/actuator/health/**").permitAll()
+                .requestMatchers("/stays", "/stays/**").hasRole("CUSTOMER")
                 .requestMatchers("/account/**").hasRole("CUSTOMER")
                 .requestMatchers("/sandbox/payments/**").hasRole("CUSTOMER")
                 .requestMatchers("/admin/**").hasRole("STAFF")
@@ -51,6 +52,9 @@ public class SecurityConfiguration {
                 .defaultAuthenticationEntryPointFor(
                         new LoginUrlAuthenticationEntryPoint("/account/login"),
                         PathPatternRequestMatcher.withDefaults().matcher("/account/**"))
+                .defaultAuthenticationEntryPointFor(
+                        new LoginUrlAuthenticationEntryPoint("/account/login"),
+                        PathPatternRequestMatcher.withDefaults().matcher("/stays/**"))
                 .defaultAuthenticationEntryPointFor(
                         new HttpStatusEntryPoint(HttpStatus.FORBIDDEN),
                         PathPatternRequestMatcher.withDefaults().matcher("/**")));

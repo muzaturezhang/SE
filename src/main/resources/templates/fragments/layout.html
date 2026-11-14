@@ -17,7 +17,7 @@
         <svg viewBox="0 0 24 16" width="24" height="16" aria-hidden="true"><path d="M0 3h24M0 12h24"/></svg><span>探索</span>
       </button>
       <a class="wordmark" th:href="@{/}" aria-label="Holiday Resort 首页">Holiday<span>R E S O R T</span></a>
-      <div class="nav-actions"><a class="nav-room-link" th:href="@{/rooms}" th:attr="aria-current=${activePage == 'rooms' ? 'page' : null}">客房与别墅</a><a class="outline-button account-link" th:if="${customerSignedIn}" th:href="@{/account}" th:text="'我的账户 · ' + ${customerDisplayName}">我的账户</a><a class="outline-button account-link" th:unless="${customerSignedIn}" th:href="@{/account/login}">账户登录</a><a class="outline-button reserve-link" th:href="@{/rooms#stay-search}">预订住宿</a></div>
+      <div class="nav-actions"><a class="nav-room-link" th:href="@{/rooms}" th:attr="aria-current=${activePage == 'rooms' ? 'page' : null}">客房与别墅</a><a class="nav-room-link" th:if="${customerSignedIn}" th:href="@{/stays}">我的预订</a><a class="outline-button account-link" th:if="${customerSignedIn}" th:href="@{/account}" th:text="'我的账户 · ' + ${customerDisplayName}">我的账户</a><a class="outline-button account-link" th:unless="${customerSignedIn}" th:href="@{/account/login}">账户登录</a><a class="outline-button reserve-link" th:href="@{/rooms#stay-search}">预订住宿</a></div>
     </nav>
     <dialog id="navigation-dialog" class="navigation-dialog" aria-labelledby="navigation-title">
       <div class="dialog-top"><p class="section-label" id="navigation-title">EXPLORE HOLIDAY</p><button class="close-button" type="button" data-close-dialog aria-label="关闭导航">×</button></div>
@@ -66,11 +66,15 @@
       <dl class="stay-facts"><div><dt>入住</dt><dd th:text="${stay.arrival}"></dd></div><div><dt>退房</dt><dd th:text="${stay.departure}"></dd></div><div><dt>住宿安排</dt><dd th:text="${stay.nights()} + ' 晚 · ' + ${stay.rooms} + ' 间'"></dd></div><div><dt>每间每晚基础价</dt><dd th:text="'CNY ' + ${stay.rateLabel()}"></dd></div></dl>
     </div>
   </aside>
+  <nav th:fragment="customerStayNav(active)" class="stay-nav" aria-label="预订导航">
+    <a th:href="@{/rooms#stay-search}">← 客房与日期</a>
+    <div><a th:href="@{/stays/new}" th:attr="aria-current=${active == 'new' ? 'page' : null}">安排入住</a><a th:href="@{/stays}" th:attr="aria-current=${active == 'list' ? 'page' : null}">我的预订</a></div>
+  </nav>
   <nav th:fragment="accountNav(active)" class="account-nav" aria-label="账户导航">
-    <a th:href="@{/}">← 返回度假村</a><div><a th:href="@{/preview/account}" th:attr="aria-current=${active == 'profile' ? 'page' : null}">个人中心</a><a th:href="@{/preview/account/membership}" th:attr="aria-current=${active == 'membership' ? 'page' : null}">会员</a><a th:if="${bookingUiPreview == true}" th:href="@{/preview/stays}">我的预订</a></div>
+    <a th:href="@{/}">← 返回度假村</a><div><a th:href="@{/preview/account}" th:attr="aria-current=${active == 'profile' ? 'page' : null}">个人中心</a><a th:href="@{/preview/account/membership}" th:attr="aria-current=${active == 'membership' ? 'page' : null}">会员</a><a th:if="${customerSignedIn}" th:href="@{/stays}">我的预订</a><a th:if="${bookingUiPreview == true}" th:href="@{/preview/stays}">预订预览</a></div>
   </nav>
   <nav th:fragment="memberNav(active)" class="account-nav" aria-label="账户导航">
-    <a th:href="@{/}">← 返回度假村</a><div><a th:href="@{/account}" th:attr="aria-current=${active == 'profile' ? 'page' : null}">个人中心</a><a th:href="@{/account/membership}" th:attr="aria-current=${active == 'membership' ? 'page' : null}">会员</a><a th:if="${bookingUiPreview == true}" th:href="@{/preview/stays}">我的预订</a><form th:if="${customerSignedIn}" th:action="@{/logout}" method="post"><button class="plain-button" type="submit">退出登录</button></form></div>
+    <a th:href="@{/}">← 返回度假村</a><div><a th:href="@{/account}" th:attr="aria-current=${active == 'profile' ? 'page' : null}">个人中心</a><a th:href="@{/account/membership}" th:attr="aria-current=${active == 'membership' ? 'page' : null}">会员</a><a th:if="${customerSignedIn}" th:href="@{/stays}">我的预订</a><a th:if="${bookingUiPreview == true}" th:href="@{/preview/stays}">预订预览</a><form th:if="${customerSignedIn}" th:action="@{/logout}" method="post"><button class="plain-button" type="submit">退出登录</button></form></div>
   </nav>
   <aside th:fragment="accountPreviewNote" class="stay-preview-note" aria-label="账户演示说明"><strong>本地账户 UI 演示</strong><span>仅预览页面，不创建真实账号或会员，不保存密码，也不改变系统权限。请使用示例资料。</span></aside>
   <div th:fragment="accountErrors" class="admin-errors" th:if="${formErrors != null and not #lists.isEmpty(formErrors)}" role="alert"><h2>请检查账户信息</h2><ul><li th:each="error : ${formErrors}" th:text="${error}"></li></ul></div>

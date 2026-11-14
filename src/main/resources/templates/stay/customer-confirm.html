@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('确认预订')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('stay')}"></header>
+<nav th:replace="~{fragments/layout :: customerStayNav('new')}"></nav>
+<main id="main-content" tabindex="-1" class="stay-main">
+  <div class="stay-page-heading"><p class="section-label">REVIEW YOUR STAY</p><h1>确认预订</h1><p>以下金额由预订服务实时计算。请核对入住安排后再创建待支付预订。</p></div>
+  <ol class="stay-steps" aria-label="预订步骤"><li><span>01</span>入住安排</li><li aria-current="step"><span>02</span>确认报价</li><li><span>03</span>支付</li></ol>
+  <div class="admin-errors" th:if="${formErrors != null and not #lists.isEmpty(formErrors)}" role="alert"><h2>暂时无法创建预订</h2><ul><li th:each="error : ${formErrors}" th:text="${error}"></li></ul></div>
+  <div class="stay-columns" th:if="${quote != null}">
+    <form th:action="@{/stays}" method="post" class="stay-form-panel">
+      <input type="hidden" name="roomType" th:value="${stayForm.roomType}">
+      <input type="hidden" name="arrival" th:value="${stayForm.arrival}">
+      <input type="hidden" name="departure" th:value="${stayForm.departure}">
+      <input type="hidden" name="rooms" th:value="${stayForm.rooms}">
+      <input type="hidden" name="guestName" th:value="${stayForm.guestName}">
+      <input type="hidden" name="guestEmail" th:value="${stayForm.guestEmail}">
+      <input type="hidden" name="idempotencyKey" th:value="${idempotencyKey}">
+      <section class="stay-form-section" aria-labelledby="stay-summary-title"><div class="stay-section-title"><span>01</span><h2 id="stay-summary-title">入住摘要</h2></div>
+        <dl class="stay-facts">
+          <div><dt>房型</dt><dd th:text="${quote.roomType().name() + ' · ' + quote.roomType().englishName()}"></dd></div>
+          <div><dt>入住与退房</dt><dd th:text="${quote.stay().arrival()} + ' — ' + ${quote.stay().departure()}"></dd></div>
+          <div><dt>住宿安排</dt><dd th:text="${quote.stay().nights()} + ' 晚 · ' + ${quote.roomCount()} + ' 间'"></dd></div>
+          <div><dt>入住人</dt><dd th:text="${stayForm.guestName}"></dd></div>
+          <div><dt>联系邮箱</dt><dd th:text="${stayForm.guestEmail}"></dd></div>
+        </dl>
+      </section>
+      <section class="stay-price-note" aria-labelledby="price-title"><h2 id="price-title">费用摘要</h2><dl class="stay-facts">
+        <div><dt>每间每晚</dt><dd th:text="${quoteRateLabel}"></dd></div>
+        <div><dt>房费小计</dt><dd th:text="'CNY ' + ${#numbers.formatDecimal(quote.price().subtotalMinor() / 100.0, 1, 2)}"></dd></div>
+        <div><dt>会员优惠</dt><dd th:text="${quote.discount().active() ? '已优惠 ' + quote.price().discountPercent() + '%' : '未适用会员折扣'}"></dd></div>
+        <div><dt>应付总额</dt><dd class="stay-total" th:text="${quoteTotalLabel}"></dd></div>
+      </dl><p>创建预订后价格会保存为订单快照。支付页面只引用后端订单金额，不接受浏览器提交的金额或状态。</p></section>
+      <div class="stay-detail-actions"><button class="solid-button" type="submit">创建待支付预订 <span aria-hidden="true">→</span></button><a class="text-link" th:href="@{/stays/new(roomType=${stayForm.roomType},arrival=${stayForm.arrival},departure=${stayForm.departure},rooms=${stayForm.rooms})}">修改入住安排</a></div>
+    </form>
+    <aside class="stay-summary" aria-label="所选居所"><img th:src="${quote.roomType().imagePath()}" th:alt="${quote.roomType().imageAlt()}" width="1400" height="996"><div class="stay-summary-copy"><p class="section-label">YOUR RESIDENCE</p><h2 th:text="${quote.roomType().name()}"></h2><p class="stay-help" th:text="${quote.roomType().description()}"></p><dl class="stay-facts"><div><dt>基础价</dt><dd th:text="${quoteRateLabel}"></dd></div><div><dt>会员折扣</dt><dd th:text="${quote.discount().label()}"></dd></div></dl></div></aside>
+  </div>
+  <section class="stay-empty" th:if="${quote == null}"><h2>报价暂不可用</h2><p>请根据上方提示调整日期、房型或房间数量后重新查询。</p><a class="outline-button" th:href="@{/stays/new}">返回入住安排</a></section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

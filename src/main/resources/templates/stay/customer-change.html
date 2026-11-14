@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('调整入住安排')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('stay')}"></header>
+<nav th:replace="~{fragments/layout :: customerStayNav('list')}"></nav>
+<main id="main-content" tabindex="-1" class="stay-main">
+  <a class="text-link stay-back" th:href="@{/stays/{ref}(ref=${booking.reference()})}">← 返回预订详情</a>
+  <div class="stay-page-heading"><p class="section-label" th:text="${booking.reference()}"></p><h1>调整入住安排</h1><p>系统会重新检查库存并计算报价。已支付预订只有在总价不变时才能直接改期。</p></div>
+  <div class="stay-columns">
+    <form th:if="${booking.status().name() == 'PENDING' or booking.status().name() == 'PAID'}" th:action="@{/stays/{ref}/change(ref=${booking.reference()})}" th:object="${changeForm}" method="post" class="stay-form-panel">
+      <div class="admin-errors" th:if="${formErrors != null and not #lists.isEmpty(formErrors)}" role="alert"><h2>请检查调整内容</h2><ul><li th:each="error : ${formErrors}" th:text="${error}"></li></ul></div>
+      <section class="stay-form-section" aria-labelledby="change-title"><div class="stay-section-title"><span>01</span><h2 id="change-title">新的入住安排</h2></div>
+        <div class="admin-field"><label for="roomType">居所房型</label><select id="roomType" th:field="*{roomType}" required><option th:each="type : ${roomTypes}" th:value="${type.id}" th:text="${type.name}"></option></select></div>
+        <div class="stay-field-pair"><div class="admin-field"><label for="arrival">入住日期</label><input id="arrival" type="date" th:field="*{arrival}" th:min="${today}" required></div><div class="admin-field"><label for="departure">退房日期</label><input id="departure" type="date" th:field="*{departure}" th:min="${today.plusDays(1)}" required></div></div>
+        <div class="admin-field"><label for="rooms">房间数量</label><input id="rooms" type="number" th:field="*{rooms}" min="1" step="1" inputmode="numeric" required></div>
+        <p class="stay-help" th:if="${booking.status().name() == 'PAID'}">当前预订已支付。若新安排导致总价变化，系统会拒绝直接改期，请取消后重新预订。</p>
+        <p class="stay-help" th:if="${booking.status().name() == 'PENDING'}">待支付预订改期后会刷新报价与支付截止时间。</p>
+      </section>
+      <button class="solid-button stay-submit" type="submit">确认调整 <span aria-hidden="true">→</span></button>
+    </form>
+    <section class="stay-empty" th:if="${booking.status().name() != 'PENDING' and booking.status().name() != 'PAID'}"><h2>当前预订不能改期</h2><p>只有待支付或已支付且尚未入住的预订可以调整。</p><a class="outline-button" th:href="@{/stays/{ref}(ref=${booking.reference()})}">返回预订详情</a></section>
+    <aside class="stay-summary-placeholder"><p class="section-label">CURRENT BOOKING</p><h2 th:text="${roomTypeName}"></h2><dl class="stay-facts"><div><dt>当前入住</dt><dd th:text="${booking.stay().arrival()}"></dd></div><div><dt>当前退房</dt><dd th:text="${booking.stay().departure()}"></dd></div><div><dt>房间数量</dt><dd th:text="${booking.roomCount()}"></dd></div><div><dt>当前状态</dt><dd th:text="${booking.status().name()}"></dd></div></dl></aside>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>

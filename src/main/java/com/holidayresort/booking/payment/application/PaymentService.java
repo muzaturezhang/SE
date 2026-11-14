@@ -52,6 +52,9 @@ public class PaymentService {
     /** Initiate a stay payment; a live pending payment is returned idempotently. */
     public Payment initiatePayment(String bookingReference, String customerId) {
         Booking booking = bookings.findByReference(bookingReference);
+        if (!booking.customerId().equals(customerId)) {
+            throw new PaymentException(Kind.NOT_FOUND, "booking", "Booking not found.");
+        }
         if (booking.status() == BookingStatus.PAID) {
             throw new PaymentException(Kind.CONFLICT, "booking", "Booking is already paid.");
         }

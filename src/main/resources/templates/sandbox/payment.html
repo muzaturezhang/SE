@@ -2,43 +2,38 @@
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('Sandbox 支付')}"></head>
 <body>
-<header th:replace="~{fragments/layout :: header('account')}"></header>
-<nav th:replace="~{fragments/layout :: memberNav('membership')}"></nav>
+<header th:replace="~{fragments/layout :: header('stay')}"></header>
+<nav th:if="${payment.purpose.name() == 'BOOKING'}" th:replace="~{fragments/layout :: customerStayNav('list')}"></nav>
+<nav th:if="${payment.purpose.name() != 'BOOKING'}" th:replace="~{fragments/layout :: memberNav('membership')}"></nav>
 <main id="main-content" tabindex="-1" class="account-main">
-  <p class="admin-errors" role="alert" th:if="${memberError}" th:text="${memberError}"></p>
   <div class="account-page-heading">
     <p class="section-label">DEVELOPMENT PAYMENT SANDBOX</p>
     <h1>支付确认</h1>
-    <p>这是开发和测试用 sandbox，不会发生真实扣款。</p>
+    <p>这是开发和测试用 sandbox，不会发生真实扣款。页面仅显示当前账户自己的支付记录。</p>
   </div>
   <section class="account-member-state" aria-labelledby="payment-title">
-    <h2 id="payment-title">订单支付</h2>
+    <h2 id="payment-title">支付信息</h2>
     <dl class="stay-facts">
-      <div><dt>支付类型</dt><dd th:text="${payment.purpose.name() == 'MEMBERSHIP' ? '会员年费' : '住宿预订'}"></dd></div>
-      <div><dt>金额</dt><dd th:text="${amountLabel}"></dd></div>
-      <div><dt>状态</dt><dd th:text="${payment.status.name()}"></dd></div>
+      <div><dt>支付类型</dt><dd th:text="${purposeLabel}"></dd></div>
+      <div><dt>金额</dt><dd class="stay-total" th:text="${amountLabel}"></dd></div>
+      <div><dt>支付状态</dt><dd th:text="${paymentStatusLabel}"></dd></div>
       <div><dt>Sandbox 参考号</dt><dd th:text="${payment.providerReference}"></dd></div>
     </dl>
-    <p th:if="${payment.status.name() == 'PAID'}" class="account-pending">支付已完成。</p>
-    <p th:if="${payment.status.name() == 'UNDER_REVIEW'}" class="account-pending">支付结果待工作人员核对。</p>
-    <form th:if="${payment.status.name() == 'PENDING'}"
-          th:action="@{/sandbox/payments/{ref}/success(ref=${payment.providerReference})}" method="post">
-      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-      <button class="solid-button" type="submit">模拟支付成功</button>
-    </form>
-    <form th:if="${payment.status.name() == 'PENDING'}"
-          th:action="@{/sandbox/payments/{ref}/failed(ref=${payment.providerReference})}" method="post">
-      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-      <button class="outline-button" type="submit">模拟支付失败</button>
-    </form>
-    <form th:if="${payment.status.name() == 'PENDING'}"
-          th:action="@{/sandbox/payments/{ref}/unknown(ref=${payment.providerReference})}" method="post">
-      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-      <button class="outline-button" type="submit">模拟结果未知</button>
-    </form>
-    <a class="outline-button" th:href="@{/account/membership}">返回会员页</a>
+    <p th:if="${payment.status.name() == 'PAID'}" class="admin-success">支付已完成。</p>
+    <p th:if="${payment.status.name() == 'UNDER_REVIEW'}" class="admin-errors">支付结果待工作人员核对，请勿重复支付。</p>
+    <div class="stay-detail-actions" th:if="${payment.status.name() == 'PENDING'}">
+      <form th:action="@{/sandbox/payments/{ref}/success(ref=${payment.providerReference})}" method="post">
+        <button class="solid-button" type="submit">模拟支付成功</button>
+      </form>
+      <form th:action="@{/sandbox/payments/{ref}/failed(ref=${payment.providerReference})}" method="post">
+        <button class="outline-button" type="submit">模拟支付失败</button>
+      </form>
+      <form th:action="@{/sandbox/payments/{ref}/unknown(ref=${payment.providerReference})}" method="post">
+        <button class="outline-button" type="submit">模拟结果未知</button>
+      </form>
+    </div>
+    <a class="outline-button" th:href="${returnUrl}">返回</a>
   </section>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
-</body>
-</html>
+</body></html>

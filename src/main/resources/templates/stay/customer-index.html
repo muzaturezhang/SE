@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('我的预订')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('stay')}"></header>
+<nav th:replace="~{fragments/layout :: customerStayNav('list')}"></nav>
+<main id="main-content" tabindex="-1" class="stay-main">
+  <div class="stay-page-heading stay-heading-row"><div><p class="section-label">YOUR RESERVATIONS</p><h1>我的预订</h1><p>查看当前账户的预订、支付状态与可用操作。</p></div><a class="outline-button" th:href="@{/stays/new}">安排新的入住 →</a></div>
+  <p class="admin-success" th:if="${stayMessage}" th:text="${stayMessage}" role="status"></p>
+  <p class="admin-errors" th:if="${stayError}" th:text="${stayError}" role="alert"></p>
+  <section class="stay-empty" th:if="${reservations.isEmpty()}"><p class="section-label">NO RESERVATIONS YET</p><h2>还没有预订记录</h2><p>选择房型与入住日期，系统会实时检查库存并生成报价。</p><a class="solid-button" th:href="@{/stays/new}">开始安排入住 →</a></section>
+  <div class="reservation-list" th:if="${!reservations.isEmpty()}"><article class="reservation-entry" th:each="item : ${reservations}">
+    <img th:src="${item.imagePath}" th:alt="${item.imageAlt}" width="1400" height="996" loading="lazy">
+    <div class="reservation-copy"><p class="section-label" th:text="${item.booking.reference()}"></p><h2 th:text="${item.roomTypeName}"></h2><p class="reservation-dates" th:text="${item.booking.stay().arrival()} + ' — ' + ${item.booking.stay().departure()}"></p><p class="stay-help" th:text="${item.booking.stay().nights()} + ' 晚 · ' + ${item.booking.roomCount()} + ' 间'"></p><a class="text-link" th:href="@{/stays/{ref}(ref=${item.booking.reference()})}">查看详情 ↗</a></div>
+    <div class="reservation-status"><span class="stay-state" th:classappend="${'state-' + #strings.toLowerCase(item.booking.status().name())}" th:text="${item.bookingStatusLabel}"></span><p th:text="${item.totalLabel}"></p><p class="stay-help" th:text="'支付状态：' + ${item.paymentStatusLabel}"></p>
+      <div class="reservation-actions">
+        <form th:if="${item.booking.status().name() == 'PENDING'}" th:action="@{/stays/{ref}/pay(ref=${item.booking.reference()})}" method="post"><button class="solid-button" type="submit">支付预订</button></form>
+        <a class="text-link" th:if="${(item.booking.status().name() == 'PENDING' or item.booking.status().name() == 'PAID') and item.booking.stay().arrival().isAfter(today)}" th:href="@{/stays/{ref}/change(ref=${item.booking.reference()})}">改期</a>
+        <form th:if="${(item.booking.status().name() == 'PENDING' or item.booking.status().name() == 'PAID') and item.booking.stay().arrival().isAfter(today)}" th:action="@{/stays/{ref}/cancel(ref=${item.booking.reference()})}" method="post"><button class="text-link plain-button" type="submit">取消预订</button></form>
+      </div>
+    </div>
+  </article></div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>
