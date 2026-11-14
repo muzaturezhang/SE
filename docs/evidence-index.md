@@ -5,8 +5,8 @@ This index lists engineering evidence only. It does not claim final Stage 3/4 ac
 
 | Evidence ID | Artifact | Verification | Status |
 | --- | --- | --- | --- |
-| EV-D-001 | `target/surefire-reports/` | 313 tests, 0 failures, 0 errors, 4 environment-gated skips | LOCAL PASS |
-| EV-D-002 | `target/site/jacoco/jacoco.csv` and HTML report | 90.89% line, 75.15% branch | LOCAL PASS |
+| EV-D-001 | `target/surefire-reports/` | 317 tests, 0 failures, 0 errors, 5 environment-gated skips | LOCAL PASS |
+| EV-D-002 | `target/site/jacoco/jacoco.csv` and HTML report | 90.69% line, 74.47% branch | LOCAL PASS |
 | EV-D-003 | `target/holiday-resort-booking-0.1.0-SNAPSHOT.jar` | Spring Boot packaging via `verify` | LOCAL PASS |
 | EV-D-004 | `src/main/resources/db/migration/V1..V8` | Flyway applies 8 migrations to clean H2 and H2-MySQL-mode schema | LOCAL PASS |
 | EV-D-005 | `MySqlProfileIntegrationTest` | JDBC adapters, booking/payment/reminder lifecycle and release history | LOCAL PASS |

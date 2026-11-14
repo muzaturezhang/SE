@@ -119,6 +119,23 @@ class MySqlProfileIntegrationTest {
                 """, Integer.class, held.reference())).isEqualTo(8);
     }
     @Test
+    void membershipFeePaymentPersistsSeparatePurposeAndActivatesMembership() {
+        Customer customer = registration.register("Member Payment", "member-payment@example.com", "safePass1");
+
+        var payment = payments.initiateMembershipPayment(customer.id());
+        sandbox.simulateSuccess(payment.providerReference());
+        var paid = payments.handleCallback(payment.providerReference());
+
+        assertThat(paid.status()).isEqualTo(PaymentStatus.PAID);
+        assertThat(paid.purpose()).isEqualTo(com.holidayresort.booking.payment.domain.PaymentPurpose.MEMBERSHIP);
+        assertThat(paid.bookingReference()).isNull();
+        assertThat(paymentRepository.findByCustomerIdAndPurpose(customer.id(),
+                com.holidayresort.booking.payment.domain.PaymentPurpose.MEMBERSHIP))
+                .hasValueSatisfying(saved -> assertThat(saved.status()).isEqualTo(PaymentStatus.PAID));
+        assertThat(membershipService.statusFor(customer.id()))
+                .hasValueSatisfying(membership -> assertThat(membership.paymentConfirmed()).isTrue());
+    }
+    @Test
     void bookingChangeAndCancellationUpdateInventoryAndReminder() {
         Customer customer = registration.register("Change Guest", "change@example.com", "safePass1");
         LocalDate arrival = LocalDate.now(clock).plusDays(12);

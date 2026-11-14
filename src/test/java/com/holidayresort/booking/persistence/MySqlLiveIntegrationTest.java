@@ -6,6 +6,7 @@ import com.holidayresort.booking.booking.application.BookingService;
 import com.holidayresort.booking.booking.domain.Booking;
 import com.holidayresort.booking.booking.domain.BookingStatus;
 import com.holidayresort.booking.member.application.RegistrationService;
+import com.holidayresort.booking.member.application.MembershipService;
 import com.holidayresort.booking.member.domain.Customer;
 import com.holidayresort.booking.notification.application.ReminderRepository;
 import com.holidayresort.booking.notification.domain.ReminderKind;
@@ -49,6 +50,8 @@ class MySqlLiveIntegrationTest {
     ReminderRepository reminders;
     @Autowired
     Clock clock;
+    @Autowired
+    MembershipService memberships;
 
     @Test
     void mysqlEightAppliesMigrationsAndSeedCatalogue() {
@@ -106,6 +109,20 @@ class MySqlLiveIntegrationTest {
             pool.shutdownNow();
         }
     }
+    @Test
+    void mysqlEightExercisesSeparateMembershipPayment() {
+        Customer customer = registration.register("Live Member", "live-member@example.com", "safePass1");
+        var payment = payments.initiateMembershipPayment(customer.id());
+        sandbox.simulateSuccess(payment.providerReference());
+        var paid = payments.handleCallback(payment.providerReference());
+
+        assertThat(paid.status()).isEqualTo(PaymentStatus.PAID);
+        assertThat(paid.purpose()).isEqualTo(com.holidayresort.booking.payment.domain.PaymentPurpose.MEMBERSHIP);
+        assertThat(paid.bookingReference()).isNull();
+        assertThat(memberships.statusFor(customer.id()))
+                .hasValueSatisfying(membership -> assertThat(membership.paymentConfirmed()).isTrue());
+    }
+
     @Test
     void mysqlEightExercisesBookingChangeAndCancellation() {
         Customer customer = registration.register("Live Change", "live-change@example.com", "safePass1");

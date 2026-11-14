@@ -42,7 +42,9 @@ public class InMemoryPaymentRepository implements PaymentRepository {
     @Override
     public synchronized Payment save(Payment payment) {
         byId.put(payment.id(), payment);
-        byBooking.put(payment.bookingReference(), payment);
+        if (payment.bookingReference() != null && !payment.bookingReference().isBlank()) {
+            byBooking.put(payment.bookingReference(), payment);
+        }
         if (payment.idempotencyKey() != null && !payment.idempotencyKey().isBlank()) {
             byIdempotencyKey.put(payment.idempotencyKey(), payment);
         }
