@@ -1,6 +1,7 @@
 package com.holidayresort.booking.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.holidayresort.booking.booking.application.BookingService;
 import com.holidayresort.booking.booking.domain.Booking;
@@ -95,6 +96,29 @@ class MySqlProfileIntegrationTest {
     }
 
     @Test
+    void releasedInventoryCanBeSoldAgainWhileHistoryRemains() {
+        Customer customer = registration.register("Release Guest", "release@example.com", "safePass1");
+        LocalDate arrival = LocalDate.now(clock).plusDays(7);
+        Booking held = bookings.createBooking(customer.id(), "courtyard", arrival, arrival.plusDays(2), 4,
+                "Release Guest", "release@example.com", "idem-release-1");
+
+        assertThatThrownBy(() -> bookings.createBooking(customer.id(), "courtyard", arrival,
+                arrival.plusDays(2), 1, "Other Guest", "other@example.com", "idem-release-2"))
+                .isInstanceOf(com.holidayresort.booking.booking.application.BookingException.class);
+
+        bookings.markFailed(held.reference());
+        Booking resold = bookings.createBooking(customer.id(), "courtyard", arrival, arrival.plusDays(2), 1,
+                "Release Guest", "release@example.com", "idem-release-3");
+
+        assertThat(resold.status()).isEqualTo(BookingStatus.PENDING);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM booking_room_night WHERE booking_reference = ?
+                """, Integer.class, resold.reference())).isEqualTo(2);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM booking_room_night_history WHERE booking_reference = ?
+                """, Integer.class, held.reference())).isEqualTo(8);
+    }
+    @Test
     void adaptersPersistCustomerMembershipStaffAndPayment() {
         Customer customer = registration.register("Adapter Guest", "adapter@example.com", "safePass1");
         assertThat(members.findByEmail("ADAPTER@EXAMPLE.COM")).contains(customer);
@@ -124,4 +148,3 @@ class MySqlProfileIntegrationTest {
         assertThat(bookings.findByReference(booking.reference()).status()).isEqualTo(BookingStatus.PAID);
     }
 }
-

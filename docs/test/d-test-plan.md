@@ -25,7 +25,7 @@ This plan covers D-owned requirements:
 1. Domain unit tests: reminder timing/state transitions, price snapshots and terminal states.
 2. Repository/adaptor tests: H2 schema contracts, JDBC mappings, constraints and audit history.
 3. Application integration tests: Booking → inventory → Booking persistence → reminder lifecycle.
-4. MySQL 8 migration smoke test: enabled only when `MYSQL_URL` is present; CI runs this against a real `mysql:8.0` service.
+4. MySQL 8 persistence integration test: enabled only when `MYSQL_URL` is present; CI runs this against a real `mysql:8.0` service.
 5. Failure and concurrency tests: versioned reminder claims, stale SENDING lease recovery, duplicate callbacks, duplicate idempotency keys and rollback paths.
 6. Evidence checks: Surefire, JaCoCo CSV/HTML, packaged JAR and GitHub Actions artifacts.
 

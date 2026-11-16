@@ -17,14 +17,14 @@ Status: internal engineering verification. This is not a final course Test Repor
 
 | Item | Result |
 | --- | --- |
-| Tests executed | 290 |
-| Passed | 289 |
+| Tests executed | 305 |
+| Passed | 302 |
 | Failed | 0 |
 | Errors | 0 |
-| Skipped | 1 (`MySqlLiveIntegrationTest`, no local `MYSQL_URL`) |
+| Skipped | 3 (`MySqlLiveIntegrationTest`, no local `MYSQL_URL`) |
 | Build | BUILD SUCCESS |
-| JaCoCo line coverage | 90.11% |
-| JaCoCo branch coverage | 74.63% |
+| JaCoCo line coverage | 90.89% |
+| JaCoCo branch coverage | 75.59% |
 | Flyway migrations | 8 applied successfully to a clean H2 schema |
 | Packaged artifact | `target/holiday-resort-booking-0.1.0-SNAPSHOT.jar` |
 | CI Java 17 verification | PASS |
@@ -47,12 +47,18 @@ The coverage rule is enforcing a 90% bundle line threshold. Branch coverage is r
 ## 4. Tests added or strengthened
 
 - `BookingStatusTest`: terminal-state contract.
-- `MySqlProfileIntegrationTest`: real Spring wiring under the `mysql` profile with H2 MySQL mode, JDBC customer/membership/staff/booking/payment adapters, idempotent booking/payment submission, booking/reminder lifecycle and release history.
-- `MySqlLiveIntegrationTest`: real MySQL smoke test, environment-gated.
+- `BookingReminderEventListenerTest`: created/paid/failed reminder actions, same-day skip and non-date error propagation.
+- `ReminderDispatchLeaseTest`: dispatch invokes stale `SENDING` lease recovery.
+- `JdbcStaffProvisionerConfigurationTest`: blank/partial/valid/idempotent staff provisioning.
+- `MySqlProfileIntegrationTest`: real Spring wiring under the `mysql` profile with H2 MySQL mode, JDBC customer/membership/staff/booking/payment adapters, idempotent booking/payment submission, duplicate callback handling, booking/reminder lifecycle and released-room resale history.
+- `MySqlLiveIntegrationTest`: real MySQL migration and persistence lifecycle test, environment-gated.
 - `JdbcReminderRepositoryTest`: stale `SENDING` lease recovery.
+- `docs/test/user-test-plan.md`, `user-test-consent-and-privacy.md`, `user-test-observation-sheet.csv`: ready-to-execute Q5/Q7 protocol; no participant results fabricated.
+- `docs/test/d-failure-injection-matrix.md`: failure and boundary trace.
 - `SchemaContractTest`: V8 history and audit tables.
 - `BookingService`: dedicated `BookingInventoryPort` with in-memory and JDBC implementations.
-- `PaymentService` / `PaymentTransactionService`: provider I/O outside the transaction, atomic payment+booking state updates, safer retry/idempotency handling and clock-based paid timestamps.
+- `PaymentService` / `PaymentTransactionService`: provider I/O outside the transaction, atomic payment+booking state updates, safer retry/idempotency handling, negative staff reconciliation cases and clock-based paid timestamps.
+- Cross-module write transactions use `READ_COMMITTED` so lock acquisition is followed by a fresh availability read; the real-MySQL concurrency test caught and verified this boundary.
 
 ## 5. Known limitations
 
@@ -63,6 +69,14 @@ The coverage rule is enforcing a 90% bundle line threshold. Branch coverage is r
 5. Provider-level idempotency and delivery receipt/bounce processing are not available with the current sandbox/Mock provider.
 6. User testing, screenshots and Q5/Q7 evidence require real participants and must not be inferred from this report.
 
+## 6. CI evidence
+
+- Push run [43892676670](https://github.com/muzaturezhang/SE/actions/runs/43892676670): Java 17 verification PASS; MySQL 8 integration PASS; 0 annotations.
+- PR run [43892690685](https://github.com/muzaturezhang/SE/actions/runs/43892690685): Java 17 verification PASS; MySQL 8 integration PASS; 0 annotations.
+- Real MySQL job now exercises booking creation/idempotency, payment callback/idempotency, reminder creation/cancellation and release history, not only migrations.
+
+## 7. Conclusion
+
 ## 6. Conclusion
 
-D's persistence and reminder foundation is now wired through the merged A/B/C code for the tested booking/payment lifecycle. The remaining release blockers are real MySQL CI execution, live SMTP testing and C's unimplemented cancellation/change operations.
+D's persistence and reminder foundation is wired through the merged A/B/C code, and the real MySQL 8 CI check is green. The remaining external/scope items are live SMTP testing, C's cancellation/change implementation, membership-fee payment orchestration and Q5/Q7 user testing.

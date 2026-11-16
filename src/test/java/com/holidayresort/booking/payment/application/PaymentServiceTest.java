@@ -130,6 +130,32 @@ class PaymentServiceTest {
     }
 
     @Test
+    void duplicateSuccessCallbackIsIdempotent() {
+        Payment p = service.initiatePayment(booking.reference(), customer.id());
+        provider.simulateSuccess(p.providerReference());
+        Payment first = service.handleCallback(p.providerReference());
+        Payment second = service.handleCallback(p.providerReference());
+
+        assertThat(second.id()).isEqualTo(first.id());
+        assertThat(payments.findAll()).hasSize(1);
+    }
+
+    @Test
+    void staffCannotConfirmPendingPayment() {
+        Payment p = service.initiatePayment(booking.reference(), customer.id());
+        assertThatThrownBy(() -> service.staffConfirmPaid(p.providerReference()))
+                .isInstanceOf(PaymentException.class);
+    }
+
+    @Test
+    void staffCannotRejectPaidPayment() {
+        Payment p = service.initiatePayment(booking.reference(), customer.id());
+        provider.simulateSuccess(p.providerReference());
+        service.handleCallback(p.providerReference());
+        assertThatThrownBy(() -> service.staffReject(p.providerReference(), "late rejection"))
+                .isInstanceOf(PaymentException.class);
+    }
+    @Test
     void paidBookingCannotInitiateNewPayment() {
         Payment p = service.initiatePayment(booking.reference(), customer.id());
         provider.simulateSuccess(p.providerReference());

@@ -10,6 +10,7 @@ import com.holidayresort.booking.payment.domain.PaymentStatus;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 /** D/C boundary: all payment and booking state changes happen in one DB transaction. */
@@ -26,7 +27,7 @@ public class PaymentTransactionService {
         this.clock = clock;
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Payment createPending(String paymentId, String bookingReference, String idempotencyKey,
             String providerReference) {
         Booking booking = bookings.findByReference(bookingReference);
@@ -35,7 +36,7 @@ public class PaymentTransactionService {
                 LocalDateTime.now(clock), null));
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Payment applyResult(String providerReference, PaymentProvider.Result result) {
         Payment payment = find(providerReference);
         if (payment.status().isTerminal()) {
@@ -65,7 +66,7 @@ public class PaymentTransactionService {
         };
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Payment confirmUnderReview(String providerReference) {
         Payment payment = find(providerReference);
         if (payment.status() == PaymentStatus.PAID) {
@@ -78,7 +79,7 @@ public class PaymentTransactionService {
         return updated;
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Payment rejectUnderReview(String providerReference, String reason) {
         Payment payment = find(providerReference);
         if (payment.status() == PaymentStatus.FAILED) {

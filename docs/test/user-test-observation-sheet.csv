@@ -1,0 +1,5 @@
+ParticipantCode,UserGroup,TaskID,BuildTag,StartedAt,CompletedAt,Completion,TimeSeconds,AssistanceLevel,ErrorCount,ConfusionPoint,DirectQuote,Severity,AffectedRequirement,EvidenceFile,Observer,RetestStatus
+,P-C-,UT-C-01,,,,,,,,,,,,,,
+,P-C-,UT-C-02,,,,,,,,,,,,,,
+,P-S-,UT-S-01,,,,,,,,,,,,,,
+,P-S-,UT-S-04,,,,,,,,,,,,,,
