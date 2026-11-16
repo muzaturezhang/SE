@@ -7,6 +7,7 @@ import com.holidayresort.booking.booking.application.BookingException.Kind;
 import com.holidayresort.booking.booking.application.port.BookingRepository;
 import com.holidayresort.booking.booking.domain.Booking;
 import com.holidayresort.booking.booking.domain.BookingStatus;
+import com.holidayresort.booking.booking.infrastructure.InMemoryBookingInventoryPort;
 import com.holidayresort.booking.booking.infrastructure.InMemoryBookingRepository;
 import com.holidayresort.booking.config.BookingProperties;
 import com.holidayresort.booking.member.application.MembershipService;
@@ -54,8 +55,8 @@ class BookingServiceTest {
         memberships = new MembershipService(members, memberR,
                 new com.holidayresort.booking.config.MembershipProperties(68000, 5, 365), clock);
 
-        service = new BookingService(bookings, roomQuery, inventory, memberships,
-                new BookingProperties(15), clock);
+        service = new BookingService(bookings, roomQuery, new InMemoryBookingInventoryPort(inventory), memberships,
+                new BookingProperties(15), clock, event -> { });
     }
 
     @Test
@@ -127,8 +128,8 @@ class BookingServiceTest {
                 "Zhang San", "zhang@example.com", "idem-005");
         Clock expiredClock = Clock.fixed(Instant.parse("2026-11-11T04:20:00Z"),
                 ZoneId.of("Asia/Shanghai"));
-        BookingService expiredService = new BookingService(bookings, roomQuery, inventory,
-                memberships, new BookingProperties(15), expiredClock);
+        BookingService expiredService = new BookingService(bookings, roomQuery, new InMemoryBookingInventoryPort(inventory),
+                memberships, new BookingProperties(15), expiredClock, event -> { });
         int released = expiredService.releaseExpiredBookings();
         assertThat(released).isEqualTo(1);
         Booking after = bookings.findByReference(b.reference()).orElseThrow();

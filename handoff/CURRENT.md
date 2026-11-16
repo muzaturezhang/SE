@@ -1,7 +1,29 @@
 # 当前交接
 
-更新时间：2026-11-01，Asia/Shanghai。B第一批Room查询、第二批房间管理、第三批预订流程UI、第四批账户/会员UI、第五批工作人员预订只读UI均已完成本地实现与开发验证；设计整理已新增Room类图/CRC、导航、查询交互、UI原则与团队接入材料。2026-11-01 A 完成第一批真实注册/登录/资料/会员与身份接入（见下方 A 第一批）。Booking/Payment、真实持久化与通知仍未接入。
+更新时间：2026-11-13，Asia/Shanghai。B 的 Room/UI、A 的账户/会员、C 的 Booking/Payment 与 D 的通知/持久化已在本地合并基线上可编译；D 已补齐 H2/MySQL JDBC adapter、BookingInventoryPort、Booking→Reminder 联动、V8 迁移、MySQL-mode 集成测试与 MySQL 8 CI service。真实 MySQL 8、真实 SMTP、GitHub Actions 远端结果和 Q5/Q7 用户测试仍不能由本地结果替代。
 
+## D 集成完成 2026-11-13
+
+本轮在最新 ABC 基线上完成 D 的端到端接线：
+
+- Flyway V1–V8：Room/Member/Membership/Staff/Booking/Payment/Reminder schema、统一锁、审计历史和 V8 字段/历史表。
+- `NotificationService` 保持一天前 09:00 上海时区提醒、幂等 revision、取消/重排、重试、版本化认领，并新增 stale SENDING lease 恢复。
+- `BookingReminderEventListener` 在 Booking 创建/支付成功后安排提醒，在失败/过期后取消；Booking 与 reminder 写入同一事务。
+- D 新增 `BookingInventoryPort` 与 JDBC 实现，修复 C 不能通过 B 端口写 booking block 的集成问题；释放时先写历史再删除 active occupancy 投影。
+- 新增 Member、Membership、Staff、Booking、Payment 的 MySQL JDBC adapter，补齐 `mysql` profile 启动所需 bean。
+- 测试基础设施：`MySqlProfileIntegrationTest`、环境门禁 `MySqlLiveIntegrationTest`、MySQL 8 CI service、H2/MySQL-mode 验证和 JaCoCo。
+
+实际验证：Windows、Temurin JDK 17.0.20.1、Maven Wrapper 3.9.11；`.\scripts\test.ps1` 为 BUILD SUCCESS；290 tests / 0 failures / 0 errors / 1 skipped（真实 MySQL 环境门禁）；Flyway 在全新 H2 schema 成功应用 8 个迁移；JaCoCo 总行覆盖率 90.11%，分支覆盖率 74.63%。
+
+仍未验证：真实 MySQL 8 实例、真实 SMTP provider、GitHub Actions 远端运行、真实 Q5/Q7 用户测试。D 的 CSV/Test Plan/Test Report/Evidence Index 见 `docs/test/d-*` 与 `docs/evidence-index.md`；不得把本地 H2/Mock 结果写成最终验收。
+
+## D 通知与持久化基础 2026-10-29（历史）
+
+用户确认承担 D 的工作后，本轮在本地分支 `codex/d-foundation` 增加 Flyway、`V1__create_reminder_schedule.sql`、JDBC 提醒仓储、一天前提醒服务、provider-neutral 邮件端口、默认 Mock 邮件适配器、opt-in 调度器和 JaCoCo 报告/70% 行覆盖率门槛。没有创建 Booking/Payment/Room/Member 业务表，没有接入真实邮件供应商，也没有实现 Q8 CR3 三天前提醒。
+
+实际验证：Windows、Temurin JDK 17.0.20.1、Maven 3.9.11；`.\scripts\maven.ps1 --batch-mode --no-transfer-progress verify` 为 BUILD SUCCESS，230 tests / 0 failures / 0 errors / 0 skipped；Flyway 在 H2 测试库成功应用 V1；JaCoCo 总行覆盖率 95.05%，通知包 86.72%，70% BUNDLE 门槛通过。详情见 `docs/d-persistence-notification-foundation.md` 和 `log/2026-10-29-d-foundation.md`。
+
+仍未验证 MySQL 8、真实邮件 provider、Booking → Reminder 事件联调、进程崩溃后的 SENDING 恢复和 provider 幂等。当前分支尚未推送或创建 PR；不要把这些结果写成最终 Test Report、Q5/Q7 用户测试或全系统验收证据。
 ## GitHub 连接状态
 
 2026-10-30已上传至https://github.com/muzaturezhang/SE：main与b-room-ui首推成功，初始源码提交e48af50，后续文档提交以git log/远端refs为准。当前B开发使用b-room-ui；main为团队启动版本。仅holiday-resort-booking为Git根，上层SE及课程资料不上传。
@@ -95,7 +117,7 @@ handoff/B-team-integration.md按A/C/D列输入、R01..R07评审问题和未来�
 1. 已完成当前源码对应的Room class diagram/CRC、页面导航、availability interaction、逐页原则和接口交接草案。下一步按B-team-integration.md的R01..R07由各owner评审，修改草案并准备真实联调；正式Q3/Q4仍需同版本集成证据。
 2. A已提供第一批真实注册/登录/密码策略/本人资料与会员基线（见上方 A 第一批）；待 B/C/D 评审 R01/R04 初答并完成联调，C 接会员付款与 confirmPayment。`/preview/account` 路由仍不认证。
 3. A/C评审客户/工作人员Gateway：真实主体与Service授权、归属/员工数据范围、报价/快照、创建幂等、列表分页/排序、独立状态、联系字段/房号、错误映射。不能只换Mock Bean就宣称真实集成；匿名客户preview不能接真实数据。
-4. C/D补Booking事务内复核/分配/占用/释放、支付创建/回调/核对、与Room统一锁策略；D实现MySQL读写/schema/迁移。mysql仍缺业务端口而拒绝启动。
+4. C 补 Booking 事务内复核/分配/占用/释放、支付创建/回调/核对，并复用 D 的 `ROOM_INVENTORY → BOOKING → PAYMENT` 锁入口。D 的 V1–V7 schema、Room JDBC 适配和迁移已完成；A/C 的 repository 端口冻结后再补其 JDBC adapter，并在真实 MySQL 8 联调。
 5. 工作人员变更状态/支付核对按钮保持禁用；取消/改期、3天/1天提醒Q8仍待确认实现范围。没有邮件/扣款/自动过期业务。
 6. 正式RS/DS/TR、Q3/Q4、统一build四核心功能截图、真实用户研究、真实200%缩放/读屏、Windows/MySQL、CI/JaCoCo、Git提交/远程/tag仍未完成；Java17与本机干净解压构建已完成。不要声称全系统已最终验收。
 

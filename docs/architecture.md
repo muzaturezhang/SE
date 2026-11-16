@@ -10,9 +10,9 @@
                                     persistence 中的适配实现
 ```
 
-Room 已建立 StayPeriod、Room、RoomType、RoomBlock、RoomInventory 领域对象，RoomQueryService 查询服务和 RoomRepository 只读契约。开发适配器从 classpath 中的样例文件构建不可变内存快照，Controller 仅调用服务，Thymeleaf 渲染结果。D 的真实实现后续遵守评审后的契约，并通过 profile/依赖注入替换；页面不直接访问数据库。
+Room 已建立 StayPeriod、Room、RoomType、RoomBlock、RoomInventory 领域对象，RoomQueryService 查询服务和 RoomRepository 只读契约。开发适配器从 classpath 中的样例文件构建不可变内存快照，Controller 仅调用服务，Thymeleaf 渲染结果。D 已在 `persistence.room.JdbcRoomInventoryRepository` 按该契约实现 H2/MySQL 适配，并通过 `mysql` profile 替换内存实现；页面不直接访问数据库。
 
-第二批新增 RoomManagementService 和 RoomInventoryEditor 写端口。内存适配器用同步更新及 volatile 不可变快照，让校验和替换在同一原子边界执行，异常不提交修改。查询仍使用独立的只读 RoomRepository。该实现没有数据库事务或 Booking 预留能力。目录、查询、400 错误与无结果均由后端决定；浏览器不能通过篡改输入绕过校验。
+第二批新增 RoomManagementService 和 RoomInventoryEditor 写端口。内存适配器用同步更新及 volatile 不可变快照，让校验和替换在同一原子边界执行，异常不提交修改。查询仍使用独立的只读 RoomRepository。内存实现不提供数据库事务；MySQL 实现使用 `persistence_lock` 的固定锁序、事务和审计表。目录、查询、400 错误与无结果均由后端决定；浏览器不能通过篡改输入绕过校验。
 
 ## Ownership
 
@@ -31,7 +31,7 @@ Room 已建立 StayPeriod、Room、RoomType、RoomBlock、RoomInventory 领域�
 
 ## 安全与时间
 
-当前公开 `/`、`/rooms`、静态资源和健康检查；管理路径 `/admin/**` 要求 ROLE_STAFF，其他请求默认拒绝。默认 profile 不提供身份或登录；可选 local-staff 为仅回环 dev 环境提供临时 Session 登录，用于 B 独立验证。CSRF 保持开启。A 负责正式认证与身份接入。
+当前公开 `/`、`/rooms`、静态资源和健康检查；管理路径 `/admin/**` 要求 ROLE_STAFF，其他请求默认拒绝。默认 profile 不提供身份或登录；可选 local-staff 为仅回环 dev 环境提供临时 Session 登录，用于 B 独立验证。CSRF 保持开启。A 负责正式认证与身份接入。D 已提供 Flyway V1–V8、提醒 outbox、Mock/SMTP 邮件端口、统一锁、完整业务 schema，以及 A/C 的 Member/Membership/Staff/Booking/Payment JDBC adapter；Booking 使用独立库存端口与 D 的事务边界。
 
 应用提供 Asia/Shanghai 的 Clock Bean。业务日期使用 LocalDate；后续服务注入 Clock，避免依赖测试机器的默认时区。金额与共享状态尚无公共类，避免在各模块分别定义。
 

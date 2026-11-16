@@ -2,6 +2,7 @@ package com.holidayresort.booking.room.application;
 
 import static com.holidayresort.booking.room.application.RoomManagementException.Kind.*;
 
+import com.holidayresort.booking.room.application.port.RoomInventoryConflictException;
 import com.holidayresort.booking.room.application.port.RoomInventoryEditor;
 import com.holidayresort.booking.room.domain.Room;
 import com.holidayresort.booking.room.domain.RoomInventory;
@@ -12,6 +13,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.UnaryOperator;
 import org.springframework.stereotype.Service;
 
 /** B's management rules. Authentication is enforced by the STAFF HTTP boundary. */
@@ -53,7 +55,7 @@ public class RoomManagementService {
         if (!id.matches("[A-Z0-9][A-Z0-9-]{0,19}")) {
             throw error(INVALID, "roomId", "房号须为 1–20 位大写字母、数字或短横线，且以字母或数字开头。");
         }
-        repository.updateSnapshot(inventory -> {
+        updateSnapshot(inventory -> {
             requireType(inventory, typeId);
             if (inventory.rooms().stream().anyMatch(room -> room.id().equals(id))) {
                 throw error(CONFLICT, "roomId", "这个房号已存在，请使用其他房号。");
@@ -65,7 +67,7 @@ public class RoomManagementService {
     }
 
     public void update(String roomId, String typeId, boolean enabled) {
-        repository.updateSnapshot(inventory -> {
+        updateSnapshot(inventory -> {
             Room previous = requireRoom(inventory, roomId);
             requireType(inventory, typeId);
             boolean changingType = !previous.roomTypeId().equals(typeId);
@@ -77,7 +79,7 @@ public class RoomManagementService {
     }
 
     public void disable(String roomId) {
-        repository.updateSnapshot(inventory -> {
+        updateSnapshot(inventory -> {
             Room previous = requireRoom(inventory, roomId);
             if (blocked(inventory, roomId, LocalDate.now(clock))) {
                 throw error(CONFLICT, "roomId", "该房间存在当前或未来占用，暂时不能停用。");
@@ -94,7 +96,7 @@ public class RoomManagementService {
         } catch (ArithmeticException exception) {
             throw error(INVALID, "nightlyRate", "每晚房价须为大于零、最多两位小数且在支持范围内的 CNY 金额。");
         }
-        repository.updateSnapshot(inventory -> {
+        updateSnapshot(inventory -> {
             RoomType previous = requireType(inventory, typeId);
             RoomType replacement = new RoomType(previous.id(), previous.name(), previous.englishName(),
                     previous.description(), previous.imagePath(), previous.imageAlt(), previous.features(), minor);
@@ -102,6 +104,14 @@ public class RoomManagementService {
                     .map(type -> type.id().equals(typeId) ? replacement : type).toList(),
                     inventory.rooms(), inventory.blocks());
         });
+    }
+
+    private void updateSnapshot(UnaryOperator<RoomInventory> change) {
+        try {
+            repository.updateSnapshot(change);
+        } catch (RoomInventoryConflictException exception) {
+            throw error(CONFLICT, exception.field(), exception.getMessage());
+        }
     }
 
     private RoomInventory replace(RoomInventory inventory, Room replacement) {

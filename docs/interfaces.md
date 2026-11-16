@@ -241,3 +241,100 @@ State的WAITING/CONFIRMED/FAILED/REVIEW/EXPIRED只是展示投影，预订和支
 GET /admin/stays 支持reference/arrival/state；GET /admin/stays/{id}展示详情并只保留上述已知筛选字段用于返回，无任意next跳转。非法筛选400、缺记录404；no-store、转义保留。没有管理预订/支付POST；CSRF依旧启用。
 
 待A/C评审：真实员工身份与服务授权、列表可见范围/联系字段、分页/排序与查询上限、完整预订/支付状态映射、价格快照/优惠/房号和错误。真实变更/支付核对/取消/改期、事务与库存释放由C/D提供后另行接入。当前不能直接替换Mock后宣称业务集成完成。
+
+## 2026-10-29：D 通知与持久化基础草案
+
+Owner：D；评审人：A（配置/身份）、B（页面配置不影响）、C（Booking 标识与生命周期）。
+
+```java
+record ReminderRequest(String bookingReference, String recipientEmail, LocalDate checkInDate) {}
+ReminderSchedule scheduleOneDayReminder(ReminderRequest request);
+DispatchResult dispatchDue();
+```
+
+- `bookingReference` 是不透明字符串，最长 64 字符；当前不建 Booking 外键，因为 Booking schema 尚未冻结。
+- 当前只支持一天前提醒，`remindOnDate = checkInDate - 1 day`；入住日期必须晚于上海业务当天。
+- `(bookingReference, reminder kind)` 唯一。相同内容重复调用幂等；不同邮箱或入住日期返回 `CONFLICT`。
+- 状态为 `PENDING`、`SENDING`、`SENT`、`FAILED`，只属于通知调度，不是 Booking/Payment 的共享状态。
+- 邮件通过 `EmailTransport` 端口发送，默认 `MockEmailTransport`；没有 live provider，也不能在未配置时伪装发送成功。
+- 定时派发默认关闭；启用后仍需确认真实 provider、发送时间和重试上限。
+- Flyway `V1__create_reminder_schedule.sql` 只创建 `reminder_schedule`，不创建其他模块表。跨模块 schema 仍需 B/C/D 评审。
+- C 取消或改期后的提醒重排尚未实现；Q8 CR3 的三天前提醒也尚未实现。这两项不得在 Stage 4 报告中写成已完成。
+
+## 2026-11-07：D 通知、持久化与锁落地
+
+Owner：D。依据 Stage 2 DS 第 6–7 节，已实现通知端口、Room 持久化适配、完整业务 schema、统一锁序与测试基础设施。A/C 的业务 repository 端口仍未冻结；D 未在 `member`、`booking` 或 `payment` 包内代写其领域对象、状态机或服务规则。
+
+```java
+interface NotificationService {
+    ReminderSchedule scheduleOneDayReminder(ReminderRequest request);
+    boolean cancelOneDayReminder(String bookingReference);
+    DispatchResult dispatchDue();
+}
+record ReminderRequest(String bookingReference, String recipientEmail,
+                       LocalDate checkInDate, LocalDate checkOutDate,
+                       String roomTypeName) {}
+```
+
+- 提醒按 Asia/Shanghai 的入住日前一天 09:00 计划发送；`send-hour` 可配置。
+- `scheduleOneDayReminder` 对相同内容幂等；C 在改期/改房型/改邮箱后再次调用即可自动重排，并保留审计事件。
+- C 在取消成功后调用 `cancelOneDayReminder`。取消、改期调用发生在 C 的业务事务成功之后；通知行本身是 outbox。
+- 失败只保存/记录错误类别，不保存 provider 原文、邮箱或游客资料。默认 Mock；`smtp-email` profile 才启用 SMTP。
+- `reminder_schedule` 名称沿用 V1，语义即 DS 的 `reminder`；未建 booking FK，因为 C 的标识和生命周期尚未冻结，联调时必须确认。
+
+```java
+// D-owned, caller must already be in a transaction
+void lockRoomInventory();
+void lockBooking();  // ROOM_INVENTORY -> BOOKING
+void lockPayment();  // ROOM_INVENTORY -> BOOKING -> PAYMENT
+```
+
+- `JdbcRoomInventoryRepository` 实现 B 的 `RoomInventoryEditor`，仅在 `mysql` profile 替换内存适配器。
+- V1–V7 schema 已覆盖 room/member/booking/payment/reminder 与审计表；`booking_room_night(room_id, stay_date)` 主键在 DB 层防止重复占用。
+- `email_normalized` 唯一、房号主键、支付幂等键唯一；金额为整数分。
+- A/C 的 JDBC adapter 待其 repository 端口冻结后由 D 补实现；不能从 D 的 schema 反向冻结 A/C 状态机。
+## 2026-11-13：D 集成端口与 profile 基线
+
+Owner：D；评审人 A/B/C。以下签名已随当前代码落地，并已由 `MySqlProfileIntegrationTest` 在 H2 MySQL-mode 下验证；真实 MySQL 8 由 CI `mysql-integration` job 验证。
+
+### Booking 库存端口
+
+```java
+interface BookingInventoryPort {
+    Booking allocate(String roomTypeId, StayPeriod stay, int roomCount,
+                     AllocationFactory factory);
+    void release(Booking booking, String reason);
+
+    @FunctionalInterface
+    interface AllocationFactory {
+        Booking create(RoomType roomType, List<String> roomIds);
+    }
+}
+```
+
+- `allocate` 在 `ROOM_INVENTORY -> BOOKING` 锁序下重新读取房型和物理房间可用性，调用 C 的 factory 保存 Booking，再写 allocation 和 active room-night。
+- `release` 先把 active room-night 复制到 `booking_room_night_history`，再删除 active 投影、标记 allocation released，并取消提醒。
+- B 的 `RoomInventoryEditor` 仍只负责 staff room management；C 不再借用该端口写 booking block。
+
+### Booking → Reminder 事件
+
+```java
+record BookingLifecycleEvent(Type type, Booking booking, String roomTypeName) {
+    enum Type { CREATED, STATUS_CHANGED }
+}
+```
+
+`BookingService` 在创建、支付成功、失败、过期状态变化时发布事件。D 的 `BookingReminderEventListener` 在同一个事务中安排/取消 reminder；邮件发送仍由 opt-in scheduler 在事务外完成。
+
+### MySQL profile
+
+- `mysql` profile 激活 Room/Member/Membership/Staff/Booking/Payment/Reminder JDBC adapter、BookingInventoryPort 和 SandboxPaymentProvider。
+- `dev`/`test` 继续使用 A/B/C 内存 adapter，便于快速运行和隔离测试。
+- `STAFF_USERNAME` 与长度至少 16 的 `STAFF_PASSWORD` 可在 `mysql` profile 下幂等预置 STAFF；不得在源码或 YAML 提交真实密码。
+- `MYSQL_URL`、`MYSQL_USERNAME`、`MYSQL_PASSWORD` 只从环境注入。
+
+### 测试与证据
+
+- `MySqlProfileIntegrationTest`：JDBC wiring、幂等提交、重复回调、Booking → Reminder、失败取消和释放历史。
+- `MySqlLiveIntegrationTest`：真实 MySQL 8 migration smoke；无 `MYSQL_URL` 时明确 skip。
+- `docs/test/d-test-plan.md`、`d-test-case-register.csv`、`d-defect-log.csv`、`d-test-report.md` 和 `docs/evidence-index.md` 记录当前内部验证。

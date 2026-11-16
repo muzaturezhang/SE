@@ -57,6 +57,27 @@
 
 staff-booking-ui独立可选，dev-ui.sh显式启用；默认与dev-staff.sh默认不安装它。所有/admin/stays请求继续强制STAFF权限，未增加匿名例外。页面固定金额不是计价算法，展示状态不是团队公共状态机；真实列表分页/状态/授权等契约待A/C评审。
 
+## 2026-10-29：D 通知与持久化基础
+
+用户确认负责 D 的工作后，先落地不依赖未冻结跨模块 schema 的最小基础：Flyway、`reminder_schedule`、JDBC 提醒适配器、一天前提醒服务、邮件端口、默认 Mock adapter、可选调度器和 JaCoCo 报告。没有创建 Booking/Payment/Room/Member 表，没有接入真实邮件供应商，也没有声称完成 Q8 CR3。
+
+`bookingReference` 暂按最长 64 字符的不透明值保存，不建立外键。原因是 C 的 Booking 标识和生命周期尚未评审；等 C/D 确认后再决定数据库键、事件和取消/改期重排。相同 `(bookingReference, reminder kind)` 重复请求返回已有记录，内容不一致时显式冲突。
+
+邮件调用放在数据库事务之外。发送认领用 `status + version` 条件更新，失败可延迟重试，达到配置上限后进入 `FAILED`。定时派发默认关闭，避免本地开发误发；启用时仍使用 `MockEmailTransport`，除非 live adapter 经团队评审后另行接入。
+
+验证：Windows + Temurin JDK 17.0.20.1 + Maven 3.9.11，`scripts/maven.ps1 --batch-mode --no-transfer-progress verify` 为 BUILD SUCCESS，230 tests / 0 failures / 0 errors / 0 skipped，JaCoCo 总行覆盖率 95.05%，70% 门槛通过。尚未验证 MySQL 8、live email、Booking → Reminder 联调或崩溃后的 SENDING 租约恢复。
+
+## 2026-11-07：D 通知与持久化完整实现
+
+- 提醒发送时间固定为上海时区入住日前一天 09:00，可通过 `notification.send-hour` 调整；到期判断使用 UTC `Instant`，业务日期仍用上海 `LocalDate`。
+- `NotificationService.scheduleOneDayReminder` 采用当前 revision 的幂等 upsert。相同内容不重复写入；改期、退房日期、房型或邮箱变化时自动重排并写不含 PII 的提醒审计。
+- 取消以 `CANCELLED` 终态保留历史，不物理删除。发送认领和终态更新使用 `status + version` 条件更新；外发在事务之外。
+- 默认 Mock 邮件；新增可选 `smtp-email` SMTP adapter，所有主机和凭据只来自环境变量。`live-email` 仍无适配器，启动失败优于伪发送。
+- Flyway 新增 V2–V7：Room、Member、Booking、Payment、提醒审计、统一锁表和初始房型目录。`reminder_schedule` 保留名称以保护已发布 V1 checksum。
+- `booking_room_night(room_id, stay_date)` 主键在 DB 层保证同一房间不能重复占用同一夜，避免依赖 MySQL 专有 exclusion constraint。
+- 锁表使用 `ROOM_INVENTORY → BOOKING → PAYMENT` 固定顺序；B 的 JDBC Room adapter 已接入，C/A 的事务必须复用该入口。
+- A/C repository 端口未冻结前不代写其领域服务或 adapter。D 只提供 schema、锁、通知与 Room 持久化实现。
+
 ## 2026-11-01：A 成员与认证实现选择
 
 - 一个共享登录页 /account/login 同时服务 CUSTOMER 与 STAFF，登录成功后按角色跳转（STAFF → /admin/rooms，CUSTOMER → 保存请求或 /account）；失败统一回登录页。B 的 local-staff 预览由独立前置安全链保持 /staff-preview/login 原行为。
@@ -67,3 +88,12 @@ staff-booking-ui独立可选，dev-ui.sh显式启用；默认与dev-staff.sh默�
 - STAFF 不提供公开注册；开发环境经 env（LOCAL_STAFF_*）预置，生产预置方式待团队确认。
 - 匿名访问除 /account/** 外的受保护或未知路径保持 403，不跳到登录页，以维持既有基础测试语义；/account/** 匿名访问跳登录页。
 - member 内存适配与 Room 相同仅在 `!mysql & (dev | test)` 提供；D 的 MySQL 适配、唯一约束与历史保留到位后替换。
+
+## 2026-11-13：D 集成决策
+
+- Booking allocation 使用独立 `BookingInventoryPort`，不复用 B 的 `RoomInventoryEditor`。原因是 B/JDBC adapter 明确拒绝修改 booking-owned blocks，复用会把两种职责和事务边界混在一起。
+- `booking_room_night` 作为 active occupancy 投影；释放时先写 `booking_room_night_history`，再删除 active 行。这样既保持数据库级重叠约束，又保留释放证据并允许房间再次销售。
+- `BookingService` 创建 booking 时发布生命周期事件；D 的 listener 在同一个事务内写入 reminder outbox，避免 commit 后崩溃导致提醒丢失。
+- V1–V7 已作为迁移 checksum 基线保留；新增字段和审计表放入 V8，不重写旧迁移。
+- `mysql` profile 使用 JDBC adapter；`dev`/`test` 保留内存 adapter。SandboxPaymentProvider 只用于非生产/CI，真实 provider 仍需后续接入。
+- JaCoCo 90% 总行门槛保留；测试报告同时列出实际分支覆盖率和 environment-gated skip，避免只看总行数字。

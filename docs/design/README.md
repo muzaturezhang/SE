@@ -1,4 +1,4 @@
-# B 设计与团队交接材料
+# 设计与团队交接材料
 
 版本 B-DESIGN-2026-10-29-01。对应当前五批本地实现，供 A B C D 对照源码评审和接入。接口与展示状态仍未冻结；此编号是文档版本，不是 Git tag 或统一验收 build。
 
@@ -10,6 +10,7 @@
 - [可用性查询交互](availability-interaction.md)：当前只读 sequence、异常分支与连续可用反例。
 - [逐页 UI 原则](ui-principles.md)：可定位到模板的原则、用户收益与待验证项，含包容性和原型方式选择。
 - [发给队友的接入说明](../../handoff/B-team-integration.md)：当前可用接口、A/C/D 输入、评审问题和联调顺序。
+- [D 通知与持久化设计](d-notification-persistence.md)：提醒状态、outbox、持久化 ERD、统一锁序和 A/B/C 联调清单。
 - [Word 汇总](B_Design_and_Integration_Handoff.docx)：便于转发的图文汇总；详细源码级 CRC 和路由以这些 Markdown 文件为准。
 
 ## 使用方法
