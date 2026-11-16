@@ -18,8 +18,8 @@ TC-D-016,FR-DB-002,room primary key,Schema,Duplicate room identifier is rejected
 TC-D-017,FR-DB-002,booking unique idempotency,Schema,Duplicate booking idempotency key is rejected,SchemaContractTest / MySqlProfileIntegrationTest,PASS
 TC-D-018,FR-DB-003,JdbcBookingInventoryPort + JdbcPersistenceLockService,Integration,Booking allocation and persistence execute with ROOM_INVENTORY -> BOOKING lock order,MySqlProfileIntegrationTest,PASS
 TC-D-019,FR-DB-003,PaymentService + repositories,Integration,Duplicate payment callback is idempotent and booking state updates exactly once,MySqlProfileIntegrationTest,PASS
-TC-D-020,FR-DB-004,Maven/JUnit/JaCoCo/CI,Verification,`clean verify` and CI artifacts are reproducible,test-report.md / GitHub Actions,PASS_LOCAL / CI_PENDING
-TC-D-021,FR-DB-001,MySQL 8 migration smoke,Integration,Real MySQL 8 applies all migrations and seed data,MySqlLiveIntegrationTest,SKIPPED_LOCAL_ENV
+TC-D-020,FR-DB-004,Maven/JUnit/JaCoCo/CI,Verification,`clean verify` and CI artifacts are reproducible,test-report.md / GitHub Actions push+PR runs,PASS_LOCAL_AND_CI
+TC-D-021,FR-DB-001,MySQL 8 migration smoke,Integration,Real MySQL 8 applies all migrations and seed data,MySqlLiveIntegrationTest / GitHub Actions MySQL 8 jobs,PASS_CI
 TC-D-022,NFR-SEC-01,SMTP and D logging,Privacy,No credentials or raw personal data appear in D source/test evidence,static review / SmtpEmailTransportTest,PASS
 TC-D-023,FR-BOOK-001..003,BookingInventoryPort + JdbcBookingInventoryPort,Integration,Booking rollback/release does not leave active room-night rows,MySqlProfileIntegrationTest,PASS
 TC-D-024,NFR-TIM-01,Clock-injected services,Integration,Business deadlines and reminder timestamps use the injected clock/timezone,ReminderServiceTest / MySqlProfileIntegrationTest,PASS
