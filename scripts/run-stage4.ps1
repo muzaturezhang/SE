@@ -5,15 +5,32 @@ param(
 $ErrorActionPreference = 'Stop'
 $projectDir = Split-Path -Parent $PSScriptRoot
 $localJdk = Join-Path $projectDir '.cache/jdk17/extracted/jdk-17.0.20.1+1'
-$java = Join-Path $localJdk 'bin/java.exe'
+$localJava = Join-Path $localJdk 'bin/java.exe'
 $jar = Join-Path $projectDir 'target/holiday-resort-booking-0.1.0-SNAPSHOT.jar'
 $dataDir = Join-Path $projectDir 'data/local'
 $credentialDir = Join-Path $projectDir '.cache/staff-preview'
 $passwordFile = Join-Path $credentialDir 'password.txt'
 
-if (-not (Test-Path -LiteralPath $java)) {
-    throw 'Project-local JDK 17 is missing. Restore .cache/jdk17 or set up Java 17 first.'
+if (Test-Path -LiteralPath $localJava) {
+    $java = $localJava
+    $env:JAVA_HOME = $localJdk
+} else {
+    $systemJava = $null
+    if ($env:JAVA_HOME -and (Test-Path -LiteralPath (Join-Path $env:JAVA_HOME 'bin/java.exe'))) {
+        $systemJava = Join-Path $env:JAVA_HOME 'bin/java.exe'
+    } elseif (Get-Command java.exe -ErrorAction SilentlyContinue) {
+        $systemJava = (Get-Command java.exe).Source
+    }
+    if (-not $systemJava) {
+        throw 'Java 17 is required. Install JDK 17 or configure JAVA_HOME.'
+    }
+    $javaVersion = (& $systemJava -version 2>&1 | Select-Object -First 1) -join ''
+    if ($javaVersion -notmatch 'version "17\.') {
+        throw "Java 17 is required. Found: $javaVersion"
+    }
+    $java = $systemJava
 }
+
 if (-not (Test-Path -LiteralPath $jar)) {
     Write-Host 'Build artifact not found. Building the runnable JAR...'
     & (Join-Path $PSScriptRoot 'maven.ps1') --batch-mode --no-transfer-progress -DskipTests package
@@ -31,11 +48,11 @@ if (-not (Test-Path -LiteralPath $passwordFile)) {
 }
 
 $staffPassword = (Get-Content -LiteralPath $passwordFile -Raw).Trim()
-if ($staffPassword.Length -lt 16) { throw 'Stored local STAFF password is invalid. Delete the ignored password file and rerun.' }
+if ($staffPassword.Length -lt 16) {
+    throw 'Stored local STAFF password is invalid. Delete the ignored password file and rerun.'
+}
 
 $dbPath = (Join-Path $dataDir 'stage4-use').Replace('\','/')
-$env:JAVA_HOME = $localJdk
-$env:Path = "$($localJdk)\bin;$env:Path"
 $env:SPRING_PROFILES_ACTIVE = 'dev,local-staff'
 $env:SPRING_DATASOURCE_URL = "jdbc:h2:file:$dbPath;MODE=MySQL;DATABASE_TO_LOWER=TRUE;AUTO_SERVER=TRUE"
 $env:SERVER_ADDRESS = '127.0.0.1'
@@ -44,7 +61,7 @@ $env:LOCAL_STAFF_USERNAME = 'localstaff'
 $env:LOCAL_STAFF_PASSWORD = $staffPassword
 
 Write-Host ''
-Write-Host 'Holiday Resort Stage 4 local test environment'
+Write-Host 'Holiday Resort Group 6 Stage 4 local test environment'
 Write-Host "Customer entry:  http://127.0.0.1:$Port/account/register"
 Write-Host "Customer stays:   http://127.0.0.1:$Port/stays/new"
 Write-Host "STAFF entry:      http://127.0.0.1:$Port/account/login"
