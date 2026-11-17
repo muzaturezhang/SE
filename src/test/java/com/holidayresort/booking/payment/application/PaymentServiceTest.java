@@ -81,6 +81,14 @@ class PaymentServiceTest {
     }
 
     @Test
+    void initiateRejectsCustomerWhoDoesNotOwnBooking() {
+        assertThatThrownBy(() -> service.initiatePayment(booking.reference(), "different-customer"))
+                .isInstanceOfSatisfying(PaymentException.class,
+                        exception -> assertThat(exception.kind()).isEqualTo(PaymentException.Kind.NOT_FOUND));
+        assertThat(payments.findAll()).isEmpty();
+    }
+
+    @Test
     void initiateIsIdempotentForSameBooking() {
         Payment first = service.initiatePayment(booking.reference(), customer.id());
         Payment second = service.initiatePayment(booking.reference(), customer.id());

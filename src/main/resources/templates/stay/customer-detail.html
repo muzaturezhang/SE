@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('预订详情')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('stay')}"></header>
+<nav th:replace="~{fragments/layout :: customerStayNav('list')}"></nav>
+<main id="main-content" tabindex="-1" class="stay-main">
+  <a class="text-link stay-back" th:href="@{/stays}">← 我的预订</a>
+  <p class="admin-success" th:if="${stayMessage}" th:text="${stayMessage}" role="status"></p>
+  <p class="admin-errors" th:if="${stayError}" th:text="${stayError}" role="alert"></p>
+  <div class="stay-page-heading"><p class="section-label" th:text="${booking.reference()}"></p><h1>预订详情</h1><div class="stay-state-row"><span class="stay-state" th:classappend="${'state-' + #strings.toLowerCase(booking.status().name())}" th:text="${bookingStatusLabel}"></span><span class="stay-state" th:classappend="${payment != null ? 'state-' + #strings.toLowerCase(payment.status().name()) : 'state-none'}" th:text="'支付：' + ${paymentStatusLabel}"></span></div></div>
+  <div class="stay-columns">
+    <div class="stay-detail-copy">
+      <section class="stay-form-section"><h2>入住与联系资料</h2><dl class="stay-facts"><div><dt>房型</dt><dd th:text="${roomTypeName}"></dd></div><div><dt>入住</dt><dd th:text="${booking.stay().arrival()}"></dd></div><div><dt>退房</dt><dd th:text="${booking.stay().departure()}"></dd></div><div><dt>住宿安排</dt><dd th:text="${booking.stay().nights()} + ' 晚 · ' + ${booking.roomCount()} + ' 间'"></dd></div><div><dt>入住人</dt><dd th:text="${booking.guestName()}"></dd></div><div><dt>联系邮箱</dt><dd th:text="${booking.guestEmail()}"></dd></div><div><dt>支付截止时间</dt><dd th:text="${booking.paymentDeadline() != null} ? ${#temporals.format(booking.paymentDeadline(), 'yyyy-MM-dd HH:mm')} : '不适用'"></dd></div></dl></section>
+      <section class="stay-form-section"><h2>费用与支付</h2><dl class="stay-facts"><div><dt>房费小计</dt><dd th:text="${subtotalLabel}"></dd></div><div><dt>会员优惠</dt><dd th:text="${discountAmountLabel}"></dd></div><div><dt>应付总额</dt><dd class="stay-total" th:text="${totalLabel}"></dd></div><div><dt>预订状态</dt><dd th:text="${bookingStatusLabel}"></dd></div><div><dt>支付状态</dt><dd th:text="${paymentStatusLabel}"></dd></div><div th:if="${payment != null}"><dt>支付参考号</dt><dd th:text="${payment.providerReference()}"></dd></div></dl><p class="stay-help">预订状态和支付状态分别展示。支付结果未知时，请等待工作人员核对后再尝试。</p></section>
+      <div class="stay-detail-actions">
+        <form th:if="${booking.status().name() == 'PENDING'}" th:action="@{/stays/{ref}/pay(ref=${booking.reference()})}" method="post"><button class="solid-button" type="submit">继续支付 <span aria-hidden="true">→</span></button></form>
+        <a class="outline-button" th:if="${(booking.status().name() == 'PENDING' or booking.status().name() == 'PAID') and booking.stay().arrival().isAfter(today)}" th:href="@{/stays/{ref}/change(ref=${booking.reference()})}">调整入住安排</a>
+        <form th:if="${(booking.status().name() == 'PENDING' or booking.status().name() == 'PAID') and booking.stay().arrival().isAfter(today)}" th:action="@{/stays/{ref}/cancel(ref=${booking.reference()})}" method="post"><button class="text-link plain-button" type="submit">取消预订</button></form>
+      </div>
+    </div>
+    <aside class="stay-summary" aria-label="预订居所"><img th:src="${imagePath}" th:alt="${imageAlt}" width="1400" height="996"><div class="stay-summary-copy"><p class="section-label">YOUR RESIDENCE</p><h2 th:text="${roomTypeName}"></h2><dl class="stay-facts"><div><dt>记录编号</dt><dd th:text="${booking.reference()}"></dd></div><div><dt>创建时间</dt><dd th:text="${#temporals.format(booking.createdAt(), 'yyyy-MM-dd HH:mm')}"></dd></div><div><dt>应付总额</dt><dd th:text="${totalLabel}"></dd></div></dl></div></aside>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body></html>
