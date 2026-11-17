@@ -52,7 +52,7 @@
     <script th:src="@{/js/app.js}" defer></script>
   </footer>
   <nav th:fragment="staffNav" class="staff-nav" aria-label="管理导航">
-    <div class="staff-sections"><a th:href="@{/admin/rooms}" th:attr="aria-current=${staffSection != 'stays' ? 'page' : null}">房间管理</a><a th:if="${staffBookingUiPreview}" th:href="@{/admin/stays}" th:attr="aria-current=${staffSection == 'stays' ? 'page' : null}">预订管理</a></div>
+    <div class="staff-sections"><a th:href="@{/admin/rooms}" th:attr="aria-current=${staffSection != 'stays' ? 'page' : null}">房间管理</a><a th:if="${staffSignedIn or staffBookingUiPreview}" th:href="@{/admin/stays}" th:attr="aria-current=${staffSection == 'stays' ? 'page' : null}">预订管理</a></div>
     <div><a th:href="@{/rooms}">查看客房页 ↗</a><form th:if="${localStaffPreview}" th:action="@{/logout}" method="post"><button class="plain-button" type="submit">退出管理</button></form></div>
   </nav>
   <nav th:fragment="stayNav(active)" class="stay-nav" aria-label="入住安排导航">

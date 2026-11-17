@@ -139,6 +139,11 @@ public class BookingService {
         return bookings.findByCustomerId(customerId);
     }
 
+    /** STAFF-facing read model; route authorization is enforced by the web security layer. */
+    public List<Booking> listForStaff() {
+        return bookings.findAll();
+    }
+
     /** Customer-facing ownership boundary; unknown and foreign references both return 404 semantics. */
     public Booking findForCustomer(String customerId, String reference) {
         return findOwned(customerId, reference);
