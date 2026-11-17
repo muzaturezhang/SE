@@ -2,6 +2,25 @@
 
 Status: ready-to-execute protocol. No participant results are recorded in this file. Actual evidence must be collected only after real sessions and anonymisation.
 
+## Current build availability — 2026-11-14
+
+Use the final same-build tag for every participant session. Do not test the isolated `/preview/**` routes as if they were final production flows.
+
+| Task group | Current engineering status | Final route or note |
+| --- | --- | --- |
+| UT-C-01 | Available | `/rooms` |
+| UT-C-02 | Available | `/account/register`, `/account/login` |
+| UT-C-03 | Available with sandbox payment | `/account/membership` |
+| UT-C-04 | Available with server quote | `/stays/new` after customer login |
+| UT-C-05 | Available with sandbox payment states | `/sandbox/payments/{reference}` |
+| UT-C-06 | Available with ownership isolation | `/stays` |
+| UT-C-07 | Available for supported pending/paid rules | `/stays/{reference}/change`, `/cancel` |
+| UT-S-01..03 | Available | `/admin/rooms` |
+| UT-S-04 | Available | `/admin/stays` |
+| UT-S-05 | Available only for `UNDER_REVIEW` payment | `/admin/stays/{reference}` |
+
+Automated evidence is complete for these routes, but no participant completion, timing, consent or retest data has been collected.
+
 Owner: D (Quality, Notification and Persistence Lead).
 Reviewers: A (scenario/compliance), B (UI/task design), C (booking/payment state evidence).
 
