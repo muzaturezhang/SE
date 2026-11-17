@@ -7,6 +7,7 @@ public record BookingLifecycleEvent(Type type, Booking booking, String roomTypeN
 
     public enum Type {
         CREATED,
-        STATUS_CHANGED
+        STATUS_CHANGED,
+        CHANGED
     }
 }

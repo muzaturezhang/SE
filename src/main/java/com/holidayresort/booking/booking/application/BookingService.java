@@ -151,6 +151,80 @@ public class BookingService {
         return pending.size();
     }
 
+    /** Cancel an owned booking before check-in and release its inventory. */
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Booking cancel(String customerId, String reference) {
+        Booking booking = findOwned(customerId, reference);
+        if (booking.status() == BookingStatus.CANCELLED) {
+            return booking;
+        }
+        if (booking.status() != BookingStatus.PENDING && booking.status() != BookingStatus.PAID) {
+            throw new BookingException(Kind.CONFLICT, "status",
+                    "This booking can no longer be cancelled.");
+        }
+        if (!booking.stay().arrival().isAfter(LocalDate.now(clock))) {
+            throw new BookingException(Kind.CONFLICT, "arrival",
+                    "A booking cannot be cancelled after its arrival date.");
+        }
+        inventory.release(booking, "CUSTOMER_CANCELLED");
+        Booking cancelled = bookings.save(booking.withStatus(BookingStatus.CANCELLED));
+        events.publishEvent(new BookingLifecycleEvent(
+                BookingLifecycleEvent.Type.STATUS_CHANGED, cancelled, null));
+        return cancelled;
+    }
+
+    /**
+     * Change an owned PENDING booking, or a PAID booking whose new total is
+     * unchanged. A price-changing PAID booking must be cancelled/rebooked so a
+     * second charge is never created silently.
+     */
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Booking change(String customerId, String reference, String roomTypeId,
+                          LocalDate arrival, LocalDate departure, int roomCount) {
+        Booking booking = findOwned(customerId, reference);
+        if (booking.status() != BookingStatus.PENDING && booking.status() != BookingStatus.PAID) {
+            throw new BookingException(Kind.CONFLICT, "status",
+                    "Only a pending or paid booking can be changed.");
+        }
+        if (!booking.stay().arrival().isAfter(LocalDate.now(clock))) {
+            throw new BookingException(Kind.CONFLICT, "arrival",
+                    "A booking cannot be changed after its arrival date.");
+        }
+        if (roomCount <= 0) {
+            throw new BookingException(Kind.INVALID, "roomCount", "Room count must be positive.");
+        }
+        StayPeriod newStay = new StayPeriod(arrival, departure);
+        RoomType newType = roomQuery.listRoomTypes().stream()
+                .filter(type -> type.id().equals(roomTypeId))
+                .findFirst()
+                .orElseThrow(() -> new BookingException(Kind.INVALID, "roomType", "Unknown room type."));
+        DiscountResult discount = memberships.discountFor(customerId);
+        PriceSnapshot newPrice = PriceSnapshot.of(newType.nightlyRateMinor(), newStay.nights(),
+                roomCount, discount.active() ? discount.discountPercent() : 0);
+        if (booking.status() == BookingStatus.PAID
+                && newPrice.totalMinor() != booking.price().totalMinor()) {
+            throw new BookingException(Kind.CONFLICT, "price",
+                    "A paid booking can only be changed when the total price is unchanged.");
+        }
+        LocalDateTime newDeadline = booking.status() == BookingStatus.PENDING
+                ? LocalDateTime.now(clock).plusMinutes(properties.bookingHoldMinutes())
+                : booking.paymentDeadline();
+        Booking changed = inventory.change(booking, roomTypeId, newStay, roomCount,
+                (type, roomIds) -> bookings.save(booking.withChange(
+                        roomTypeId, newStay, roomCount, roomIds, newPrice,
+                        booking.status(), newDeadline)));
+        events.publishEvent(new BookingLifecycleEvent(
+                BookingLifecycleEvent.Type.CHANGED, changed, newType.name()));
+        return changed;
+    }
+
+    private Booking findOwned(String customerId, String reference) {
+        Booking booking = findByReference(reference);
+        if (!booking.customerId().equals(customerId)) {
+            throw new BookingException(Kind.NOT_FOUND, "reference", "Booking not found.");
+        }
+        return booking;
+    }
     /** Mark a booking as paid (called by PaymentService after successful payment). */
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Booking markPaid(String reference) {

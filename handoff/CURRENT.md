@@ -13,7 +13,7 @@
 - 新增 Member、Membership、Staff、Booking、Payment 的 MySQL JDBC adapter，补齐 `mysql` profile 启动所需 bean。
 - 测试基础设施：`MySqlProfileIntegrationTest`、环境门禁 `MySqlLiveIntegrationTest`、MySQL 8 CI service、H2/MySQL-mode 验证和 JaCoCo。
 
-实际验证：Windows、Temurin JDK 17.0.20.1、Maven Wrapper 3.9.11；`.\scripts\test.ps1` 为 BUILD SUCCESS；305 tests / 0 failures / 0 errors / 3 skipped（真实 MySQL 环境门禁）；Flyway 在全新 H2 schema 成功应用 8 个迁移；JaCoCo 总行覆盖率 90.89%，分支覆盖率 75.59%。
+实际验证：Windows、Temurin JDK 17.0.20.1、Maven Wrapper 3.9.11；`.\scripts\test.ps1` 为 BUILD SUCCESS；313 tests / 0 failures / 0 errors / 4 skipped（真实 MySQL 环境门禁）；Flyway 在全新 H2 schema 成功应用 8 个迁移；JaCoCo 总行覆盖率 90.89%，分支覆盖率 75.15%。
 
 已验证：GitHub Actions push run 43881256201 与 PR run 43882193364 的 Java 17 verification、MySQL 8 integration 均成功；PR #2 已合并到 `main`（`aa1275d`）。仍未验证：真实 SMTP provider 和真实 Q5/Q7 用户测试。D 的 CSV/Test Plan/Test Report/Evidence Index 见 `docs/test/d-*` 与 `docs/evidence-index.md`；不得把本地 H2/Mock 结果写成最终验收。
 

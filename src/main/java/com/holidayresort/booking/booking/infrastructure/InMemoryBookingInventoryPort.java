@@ -63,6 +63,43 @@ public class InMemoryBookingInventoryPort implements BookingInventoryPort {
     }
 
     @Override
+    public synchronized Booking change(Booking current, String roomTypeId, StayPeriod stay,
+            int roomCount, AllocationFactory factory) {
+        AtomicReference<Booking> saved = new AtomicReference<>();
+        inventory.updateSnapshot(snapshot -> {
+            List<RoomBlock> baseBlocks = snapshot.blocks().stream()
+                    .filter(block -> !(current.allocatedRoomIds().contains(block.roomId())
+                            && block.period().equals(current.stay())))
+                    .toList();
+            RoomType type = snapshot.roomTypes().stream()
+                    .filter(candidate -> candidate.id().equals(roomTypeId))
+                    .findFirst()
+                    .orElseThrow(() -> new BookingException(
+                            BookingException.Kind.INVALID, "roomType", "Unknown room type."));
+            List<String> available = new ArrayList<>();
+            for (Room room : snapshot.rooms()) {
+                if (!room.roomTypeId().equals(roomTypeId) || !room.enabled()) {
+                    continue;
+                }
+                boolean blocked = baseBlocks.stream().anyMatch(block -> block.roomId().equals(room.id())
+                        && block.period().overlaps(stay));
+                if (!blocked) {
+                    available.add(room.id());
+                }
+            }
+            if (available.size() < roomCount) {
+                throw new BookingException(BookingException.Kind.CONFLICT, "rooms",
+                        "Not enough rooms available for the changed stay.");
+            }
+            List<String> picked = List.copyOf(available.subList(0, roomCount));
+            Booking changed = factory.create(type, picked);
+            saved.set(changed);
+            List<RoomBlock> blocks = new ArrayList<>(baseBlocks);
+            picked.forEach(roomId -> blocks.add(new RoomBlock(roomId, stay)));
+            return new RoomInventory(snapshot.roomTypes(), snapshot.rooms(), blocks);
+        });
+        return saved.get();
+    }
     public synchronized void release(Booking booking, String reason) {
         inventory.updateSnapshot(current -> {
             List<RoomBlock> kept = current.blocks().stream()

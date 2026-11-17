@@ -136,6 +136,61 @@ class BookingServiceTest {
         assertThat(after.status()).isEqualTo(BookingStatus.EXPIRED);
     }
 
+    @Test
+    void customerCanCancelOwnPendingBookingAndReleaseRooms() {
+        Booking booking = service.createBooking(customer.id(), "courtyard",
+                LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 17), 2,
+                "Zhang San", "zhang@example.com", "cancel-1");
+
+        Booking cancelled = service.cancel(customer.id(), booking.reference());
+
+        assertThat(cancelled.status()).isEqualTo(BookingStatus.CANCELLED);
+        var search = roomQuery.search(new com.holidayresort.booking.room.application.RoomSearchQuery(
+                LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 17), 2, "courtyard"));
+        assertThat(search.options()).hasSize(1);
+        assertThat(search.options().get(0).availableRooms()).isEqualTo(2);
+    }
+
+    @Test
+    void customerCannotCancelAnotherCustomersBooking() {
+        Booking booking = service.createBooking(customer.id(), "courtyard",
+                LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 17), 1,
+                "Zhang San", "zhang@example.com", "cancel-2");
+
+        assertThatThrownBy(() -> service.cancel("other-customer", booking.reference()))
+                .isInstanceOfSatisfying(BookingException.class,
+                        e -> assertThat(e.kind()).isEqualTo(BookingException.Kind.NOT_FOUND));
+    }
+
+    @Test
+    void pendingBookingCanChangeDatesAndRoomCount() {
+        Booking booking = service.createBooking(customer.id(), "courtyard",
+                LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 17), 1,
+                "Zhang San", "zhang@example.com", "change-1");
+
+        Booking changed = service.change(customer.id(), booking.reference(), "courtyard",
+                LocalDate.of(2026, 11, 16), LocalDate.of(2026, 11, 19), 2);
+
+        assertThat(changed.reference()).isEqualTo(booking.reference());
+        assertThat(changed.stay().arrival()).isEqualTo(LocalDate.of(2026, 11, 16));
+        assertThat(changed.roomCount()).isEqualTo(2);
+        assertThat(changed.price().nights()).isEqualTo(3);
+        assertThat(changed.status()).isEqualTo(BookingStatus.PENDING);
+        assertThat(changed.allocatedRoomIds()).hasSize(2);
+    }
+
+    @Test
+    void paidBookingCannotChangeToDifferentTotal() {
+        Booking booking = service.createBooking(customer.id(), "courtyard",
+                LocalDate.of(2026, 11, 15), LocalDate.of(2026, 11, 17), 1,
+                "Zhang San", "zhang@example.com", "change-2");
+        service.markPaid(booking.reference());
+
+        assertThatThrownBy(() -> service.change(customer.id(), booking.reference(), "courtyard",
+                LocalDate.of(2026, 11, 16), LocalDate.of(2026, 11, 18), 2))
+                .isInstanceOfSatisfying(BookingException.class,
+                        e -> assertThat(e.kind()).isEqualTo(BookingException.Kind.CONFLICT));
+    }
     private static class TestInventoryEditor implements RoomInventoryEditor {
         private RoomInventory inventory;
 

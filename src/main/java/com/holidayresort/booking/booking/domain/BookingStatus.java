@@ -5,18 +5,20 @@ package com.holidayresort.booking.booking.domain;
  *
  * PENDING  — created, room held, waiting for payment within the deadline
  * PAID     — payment confirmed, room is committed to the guest
- * FAILED   — payment rejected or cancelled, room released
+ * FAILED   — payment rejected, room released
  * UNDER_REVIEW — payment callback result unknown, staff must reconcile
  * EXPIRED  — hold timed out without payment, room released
+ * CANCELLED — customer cancelled before stay, room released
  */
 public enum BookingStatus {
     PENDING,
     PAID,
     FAILED,
     UNDER_REVIEW,
-    EXPIRED;
+    EXPIRED,
+    CANCELLED;
 
     public boolean isTerminal() {
-        return this == PAID || this == FAILED || this == EXPIRED;
+        return this == PAID || this == FAILED || this == EXPIRED || this == CANCELLED;
     }
 }

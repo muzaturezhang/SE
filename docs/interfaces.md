@@ -338,3 +338,22 @@ record BookingLifecycleEvent(Type type, Booking booking, String roomTypeName) {
 - `MySqlProfileIntegrationTest`：JDBC wiring、幂等提交、重复回调、Booking → Reminder、失败取消和释放历史。
 - `MySqlLiveIntegrationTest`：真实 MySQL 8 migration smoke；无 `MYSQL_URL` 时明确 skip。
 - `docs/test/d-test-plan.md`、`d-test-case-register.csv`、`d-defect-log.csv`、`d-test-report.md` 和 `docs/evidence-index.md` 记录当前内部验证。
+
+## 2026-11-14：Booking 取消与改期契约
+
+Owner：C（业务规则）/ D（持久化、库存和 Reminder）。以下方法已随本轮实现落地：
+
+```java
+Booking cancel(String customerId, String reference);
+Booking change(String customerId, String reference, String roomTypeId,
+               LocalDate arrival, LocalDate departure, int roomCount);
+```
+
+规则：
+
+- `cancel` 只允许 `PENDING` 或 `PAID` 且入住日尚未到达；必须校验 Booking 属于当前 customer。
+- `PENDING` 改期后重新计算价格并刷新 15 分钟 hold deadline。
+- `PAID` 只有在改期后总价不变时允许直接改期；价格变化必须引导取消/重新预订，避免静默二次扣款。
+- `BookingInventoryPort.change` 在 `ROOM_INVENTORY -> BOOKING` 锁序下原子释放旧分配、重新检查库存、保存新快照并写新分配。
+- 取消写入 `CANCELLED` 并取消 Reminder；改期写入 `CHANGED` 事件并重排 Reminder。
+- 旧 room-night 进入 append-only history；同一 Booking 改期复用旧 allocation 行时只重置 active 状态，night 释放历史保留。

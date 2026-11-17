@@ -18,6 +18,9 @@ public interface BookingInventoryPort {
 
     void release(Booking booking, String reason);
 
+    Booking change(Booking current, String roomTypeId, StayPeriod stay, int roomCount,
+                  AllocationFactory factory);
+
     @FunctionalInterface
     interface AllocationFactory {
         Booking create(RoomType roomType, List<String> roomIds);

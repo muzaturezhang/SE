@@ -23,3 +23,6 @@ TC-D-021,FR-DB-001,MySQL 8 migration smoke,Integration,Real MySQL 8 applies all 
 TC-D-022,NFR-SEC-01,SMTP and D logging,Privacy,No credentials or raw personal data appear in D source/test evidence,static review / SmtpEmailTransportTest,PASS
 TC-D-023,FR-BOOK-001..003,BookingInventoryPort + JdbcBookingInventoryPort,Integration,Booking rollback/release does not leave active room-night rows,MySqlProfileIntegrationTest,PASS
 TC-D-024,NFR-TIM-01,Clock-injected services,Integration,Business deadlines and reminder timestamps use the injected clock/timezone,ReminderServiceTest / MySqlProfileIntegrationTest,PASS
+TC-D-025,FR-BOOK-006,BookingService + BookingInventoryPort,Integration,Owned booking cancellation releases inventory and cancels reminder,BookingServiceTest / MySqlProfileIntegrationTest / MySqlLiveIntegrationTest,PASS
+TC-D-026,FR-BOOK-006,BookingService + BookingInventoryPort,Integration,Pending booking change re-prices and reallocates atomically; paid price-changing change is rejected,BookingServiceTest / MySqlProfileIntegrationTest,PASS
+TC-D-027,NFR-SEC-01,BookingService ownership guard,Security,Customer cannot cancel or change another customer's booking,BookingServiceTest,PASS
