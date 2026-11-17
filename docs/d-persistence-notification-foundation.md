@@ -176,7 +176,7 @@ $env:JAVA_HOME = '<project>/.cache/jdk17/extracted/jdk-17.0.20.1+1'
 .\scripts\test.ps1
 ```
 
-结果：`BUILD SUCCESS`；317 tests、0 failures、0 errors、5 skipped（本机无 MYSQL_URL）；Flyway 在全新 H2 数据库成功应用 8 个迁移；JaCoCo 总行覆盖率 90.69%，分支覆盖率 74.47%，90% BUNDLE 门槛通过。MySQL-mode profile 集成测试验证 Customer/Membership/Staff/Booking/Payment JDBC adapter、幂等提交、重复回调、释放后重新销售和 Booking→Reminder 生命周期。GitHub Actions push run `43881256201` 与 PR run `43882193364` 的 Java 17 verification、MySQL 8 integration 均通过；PR #2 已合并到 `main`（`aa1275d`）。
+结果：`BUILD SUCCESS`；318 tests、0 failures、0 errors、5 skipped（本机无 MYSQL_URL）；Flyway 在全新 H2 数据库成功应用 8 个迁移；JaCoCo 总行覆盖率 90.42%，分支覆盖率 74.42%，90% BUNDLE 门槛通过。MySQL-mode profile 集成测试验证 Customer/Membership/Staff/Booking/Payment JDBC adapter、幂等提交、重复回调、释放后重新销售和 Booking→Reminder 生命周期。GitHub Actions push run `43881256201` 与 PR run `43882193364` 的 Java 17 verification、MySQL 8 integration 均通过；PR #2 已合并到 `main`（`aa1275d`）。
 
 ## 9. 明确未完成与联调条件
 

@@ -35,6 +35,7 @@ public class SecurityConfiguration {
                         "/css/**", "/js/**", "/images/**", "/vendor/**", "/error",
                         "/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers("/account/**").hasRole("CUSTOMER")
+                .requestMatchers("/sandbox/payments/**").hasRole("CUSTOMER")
                 .requestMatchers("/admin/**").hasRole("STAFF")
                 .anyRequest().denyAll();
         });

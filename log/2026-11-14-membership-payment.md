@@ -11,8 +11,8 @@
 
 ## 验证
 
-- 本地完整套件：317 tests，0 failures，0 errors，5 个 live MySQL 环境 skip。
-- JaCoCo line 90.69%，branch 74.47%。
+- 本地完整套件：318 tests，0 failures，0 errors，5 个 live MySQL 环境 skip。
+- JaCoCo line 90.42%，branch 74.42%。
 - 新增 `MembershipPaymentServiceTest`。
 - `MySqlProfileIntegrationTest` 覆盖 MEMBERSHIP purpose、无 booking reference、会员激活。
 - `MySqlLiveIntegrationTest` 新增真实 MySQL 会员费用例。

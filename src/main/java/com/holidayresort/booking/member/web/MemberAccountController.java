@@ -7,6 +7,8 @@ import com.holidayresort.booking.member.application.RegistrationService;
 import com.holidayresort.booking.member.application.port.MemberRepository;
 import com.holidayresort.booking.member.domain.Customer;
 import com.holidayresort.booking.member.domain.Membership;
+import com.holidayresort.booking.payment.application.PaymentService;
+import com.holidayresort.booking.payment.domain.Payment;
 import com.holidayresort.booking.web.StaffNavigationAdvice;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -39,16 +41,18 @@ public class MemberAccountController {
     private final MemberRepository members;
     private final RegistrationService registrationService;
     private final MembershipService membershipService;
+    private final PaymentService paymentService;
     private final StaffNavigationAdvice staffNavigation;
     private final MemberNavigationAdvice memberNavigation;
     private final Clock clock;
 
     public MemberAccountController(MemberRepository members, RegistrationService registrationService,
-            MembershipService membershipService, StaffNavigationAdvice staffNavigation,
+            MembershipService membershipService, PaymentService paymentService, StaffNavigationAdvice staffNavigation,
             MemberNavigationAdvice memberNavigation, Clock clock) {
         this.members = members;
         this.registrationService = registrationService;
         this.membershipService = membershipService;
+        this.paymentService = paymentService;
         this.staffNavigation = staffNavigation;
         this.memberNavigation = memberNavigation;
         this.clock = clock;
@@ -137,6 +141,17 @@ public class MemberAccountController {
         return "redirect:/account/membership";
     }
 
+    @PostMapping("/membership/pay")
+    String payMembership(Authentication authentication, RedirectAttributes redirect) {
+        Customer customer = requireCustomer(authentication);
+        try {
+            Payment payment = paymentService.initiateMembershipPayment(customer.id());
+            return "redirect:/sandbox/payments/" + payment.providerReference();
+        } catch (RuntimeException exception) {
+            redirect.addFlashAttribute("memberError", exception.getMessage());
+            return "redirect:/account/membership";
+        }
+    }
     @ExceptionHandler(MemberUiException.class)
     String error(MemberUiException exception, HttpServletResponse response, Model model,
             Authentication authentication) {

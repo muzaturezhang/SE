@@ -17,14 +17,14 @@ Status: internal engineering verification. This is not a final course Test Repor
 
 | Item | Result |
 | --- | --- |
-| Tests executed | 317 |
+| Tests executed | 318 |
 | Passed | 302 |
 | Failed | 0 |
 | Errors | 0 |
 | Skipped | 5 (`MySqlLiveIntegrationTest`, no local `MYSQL_URL`) |
 | Build | BUILD SUCCESS |
-| JaCoCo line coverage | 90.69% |
-| JaCoCo branch coverage | 74.47% |
+| JaCoCo line coverage | 90.42% |
+| JaCoCo branch coverage | 74.42% |
 | Flyway migrations | 8 applied successfully to a clean H2 schema |
 | Packaged artifact | `target/holiday-resort-booking-0.1.0-SNAPSHOT.jar` |
 | CI Java 17 verification | PASS |

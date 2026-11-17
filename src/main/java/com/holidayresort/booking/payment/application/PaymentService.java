@@ -146,6 +146,9 @@ public class PaymentService {
                         "No membership payment record for this customer."));
     }
 
+    public Payment findByProviderReference(String providerReference) {
+        return findPayment(providerReference);
+    }
     private Payment findPayment(String providerReference) {
         return payments.findAll().stream()
                 .filter(p -> providerReference.equals(p.providerReference()))
