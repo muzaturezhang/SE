@@ -357,3 +357,16 @@ Booking change(String customerId, String reference, String roomTypeId,
 - `BookingInventoryPort.change` 在 `ROOM_INVENTORY -> BOOKING` 锁序下原子释放旧分配、重新检查库存、保存新快照并写新分配。
 - 取消写入 `CANCELLED` 并取消 Reminder；改期写入 `CHANGED` 事件并重排 Reminder。
 - 旧 room-night 进入 append-only history；同一 Booking 改期复用旧 allocation 行时只重置 active 状态，night 释放历史保留。
+
+## 2026-11-14：会员费支付契约
+
+```java
+Payment initiateMembershipPayment(String customerId);
+Payment findMembershipPayment(String customerId);
+```
+
+- `PaymentPurpose.MEMBERSHIP` 使用独立金额，`bookingReference` 必须为空。
+- 会员费金额由 `MembershipPlan.feeMinor` 提供，不接受客户端金额。
+- 重复 PENDING 请求返回同一 payment；PAID/UNDER_REVIEW 不允许静默新建。
+- 成功回调在同一事务中更新 Payment 并调用一次 `MembershipService.confirmPayment(customerId, paidOn)`。
+- 会员费支付不创建 Booking、不占用 Room、不应用住宿折扣。

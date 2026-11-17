@@ -18,4 +18,4 @@ Status: internal engineering trace. `PASS` means an automated test or successful
 | Concurrent bookings competing for limited rooms on real MySQL | Exactly one booking succeeds and no partial over-allocation is persisted | `MySqlLiveIntegrationTest.concurrentBookingCompetitionAllowsExactlyOneWinner`; CI runs 43892676670 / 43892690685 | PASS |
 | Real SMTP provider, bounce and quota | Provider-specific delivery evidence | None yet | NOT TESTED |
 | Cancellation/date-change event integration | Release/reallocate inventory and cancel/reschedule the reminder | `BookingServiceTest`, `MySqlProfileIntegrationTest`, `MySqlLiveIntegrationTest` | PASS |
-| Membership fee payment | Separate payment, then idempotent `confirmPayment` | Schema/adapter only | NOT IMPLEMENTED IN C |
+| Membership fee payment | Separate payment, then idempotent `confirmPayment` | MembershipPaymentServiceTest / MySqlProfileIntegrationTest | PASS |

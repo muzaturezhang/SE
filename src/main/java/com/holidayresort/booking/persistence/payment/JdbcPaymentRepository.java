@@ -3,6 +3,7 @@ package com.holidayresort.booking.persistence.payment;
 import com.holidayresort.booking.payment.application.PaymentException;
 import com.holidayresort.booking.payment.application.port.PaymentRepository;
 import com.holidayresort.booking.payment.domain.Payment;
+import com.holidayresort.booking.payment.domain.PaymentPurpose;
 import com.holidayresort.booking.payment.domain.PaymentStatus;
 import java.sql.Timestamp;
 import java.time.Clock;
@@ -61,17 +62,20 @@ public class JdbcPaymentRepository implements PaymentRepository {
         Timestamp now = Timestamp.from(clock.instant());
         try {
             if (previous.isEmpty()) {
-                String customerId = jdbcTemplate.queryForObject("""
-                        SELECT customer_id FROM booking WHERE reference = ?
-                        """, String.class, payment.bookingReference());
+                String customerId = payment.customerId();
+                if (customerId == null && payment.bookingReference() != null) {
+                    customerId = jdbcTemplate.queryForObject("""
+                            SELECT customer_id FROM booking WHERE reference = ?
+                            """, String.class, payment.bookingReference());
+                }
                 jdbcTemplate.update("""
                         INSERT INTO payment (
                             id, purpose, customer_id, booking_reference, amount_minor,
                             currency, state, provider_reference, failure_reason,
                             idempotency_key, paid_at, created_at, updated_at, version)
-                        VALUES (?, 'BOOKING', ?, ?, ?, 'CNY', ?, ?, ?, ?, ?, ?, ?, 0)
-                        """, payment.id(), customerId, payment.bookingReference(),
-                        payment.amountMinor(), payment.status().name(),
+                        VALUES (?, ?, ?, ?, ?, 'CNY', ?, ?, ?, ?, ?, ?, ?, 0)
+                        """, payment.id(), payment.purpose().name(), customerId,
+                        payment.bookingReference(), payment.amountMinor(), payment.status().name(),
                         payment.providerReference(), payment.failureReason(),
                         payment.idempotencyKey(), timestamp(payment.paidAt()),
                         timestamp(payment.createdAt()), now);
@@ -97,12 +101,13 @@ public class JdbcPaymentRepository implements PaymentRepository {
                 rs.getString("idempotency_key"), rs.getLong("amount_minor"),
                 PaymentStatus.valueOf(rs.getString("state")),
                 rs.getString("provider_reference"), rs.getString("failure_reason"),
-                toLocalDateTime(rs, "created_at"), toLocalDateTime(rs, "paid_at"));
+                toLocalDateTime(rs, "created_at"), toLocalDateTime(rs, "paid_at"),
+                PaymentPurpose.valueOf(rs.getString("purpose")), rs.getString("customer_id"));
     }
 
     private static final String SELECT = """
             SELECT id, booking_reference, idempotency_key, amount_minor, state,
-                   provider_reference, failure_reason, created_at, paid_at
+                   provider_reference, failure_reason, created_at, paid_at, purpose, customer_id
             FROM payment
             """;
 

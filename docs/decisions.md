@@ -106,3 +106,11 @@ staff-booking-ui独立可选，dev-ui.sh显式启用；默认与dev-staff.sh默�
 - 改期/取消必须校验 authenticated customer 的 Booking 归属。
 - 改期成功后 Reminder 必须按新入住日重排；取消后 Reminder 必须取消。
 - 生产 UI 仍需接入这两个 service 方法；当前先冻结 service 级规则和持久化测试。
+
+## 2026-11-14：会员费支付实现
+
+- Payment 增加 `purpose` 和 `customerId`；BOOKING 使用 booking reference，MEMBERSHIP 禁止 booking reference。
+- 会员费是独立 Payment，不经过住宿报价，也不产生 room allocation。
+- 成功回调调用 `MembershipService.confirmPayment` 一次；重复 callback 幂等。
+- 会员费/住宿费共享 Payment status 和 idempotency 基础设施，但不共享金额或折扣。
+- 生产 account/membership 页面仍需接入真实 controller。

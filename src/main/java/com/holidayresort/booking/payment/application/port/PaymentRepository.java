@@ -15,5 +15,12 @@ public interface PaymentRepository {
 
     List<Payment> findAll();
 
+    /** Default implementation is sufficient for in-memory and small adapters. */
+    default Optional<Payment> findByCustomerIdAndPurpose(String customerId, com.holidayresort.booking.payment.domain.PaymentPurpose purpose) {
+        return findAll().stream()
+                .filter(payment -> customerId.equals(payment.customerId()) && payment.purpose() == purpose)
+                .findFirst();
+    }
+
     Payment save(Payment payment);
 }

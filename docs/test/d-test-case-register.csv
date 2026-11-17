@@ -26,3 +26,5 @@ TC-D-024,NFR-TIM-01,Clock-injected services,Integration,Business deadlines and r
 TC-D-025,FR-BOOK-006,BookingService + BookingInventoryPort,Integration,Owned booking cancellation releases inventory and cancels reminder,BookingServiceTest / MySqlProfileIntegrationTest / MySqlLiveIntegrationTest,PASS
 TC-D-026,FR-BOOK-006,BookingService + BookingInventoryPort,Integration,Pending booking change re-prices and reallocates atomically; paid price-changing change is rejected,BookingServiceTest / MySqlProfileIntegrationTest,PASS
 TC-D-027,NFR-SEC-01,BookingService ownership guard,Security,Customer cannot cancel or change another customer's booking,BookingServiceTest,PASS
+TC-D-028,FR-PAY-004,PaymentService + PaymentTransactionService,Integration,Membership fee uses separate purpose and never creates a booking,MembershipPaymentServiceTest / MySqlProfileIntegrationTest,PASS
+TC-D-029,FR-PAY-004,PaymentTransactionService + MembershipService,Integration,Successful membership callback activates membership once and duplicate callback is idempotent,MembershipPaymentServiceTest / MySqlLiveIntegrationTest,PASS

@@ -17,14 +17,14 @@ Status: internal engineering verification. This is not a final course Test Repor
 
 | Item | Result |
 | --- | --- |
-| Tests executed | 313 |
+| Tests executed | 317 |
 | Passed | 302 |
 | Failed | 0 |
 | Errors | 0 |
-| Skipped | 4 (`MySqlLiveIntegrationTest`, no local `MYSQL_URL`) |
+| Skipped | 5 (`MySqlLiveIntegrationTest`, no local `MYSQL_URL`) |
 | Build | BUILD SUCCESS |
-| JaCoCo line coverage | 90.89% |
-| JaCoCo branch coverage | 75.15% |
+| JaCoCo line coverage | 90.69% |
+| JaCoCo branch coverage | 74.47% |
 | Flyway migrations | 8 applied successfully to a clean H2 schema |
 | Packaged artifact | `target/holiday-resort-booking-0.1.0-SNAPSHOT.jar` |
 | CI Java 17 verification | PASS |
@@ -44,6 +44,7 @@ The coverage rule is enforcing a 90% bundle line threshold. Branch coverage is r
 | FR-DB-003 | PASS for booking/payment paths covered by this slice | JdbcBookingInventoryPort / PaymentService / JdbcPersistenceLockService tests |
 | FR-DB-004 | PASS locally and in GitHub Actions push/PR workflows | Maven verify / CI workflow |
 | FR-BOOK-006 | PASS for service-level cancel/change with ownership, re-pricing, reallocation and reminder updates | BookingServiceTest / MySqlProfileIntegrationTest / MySqlLiveIntegrationTest |
+| FR-PAY-004 | PASS for separate membership payment purpose, idempotent callback and one-time membership confirmation | MembershipPaymentServiceTest / MySqlProfileIntegrationTest / MySqlLiveIntegrationTest |
 
 ## 4. Tests added or strengthened
 
@@ -60,7 +61,8 @@ The coverage rule is enforcing a 90% bundle line threshold. Branch coverage is r
 - `docs/test/d-failure-injection-matrix.md`: failure and boundary trace.
 - `SchemaContractTest`: V8 history and audit tables.
 - `BookingService`: dedicated `BookingInventoryPort` with in-memory and JDBC implementations.
-- `PaymentService` / `PaymentTransactionService`: provider I/O outside the transaction, atomic payment+booking state updates, safer retry/idempotency handling, negative staff reconciliation cases and clock-based paid timestamps.
+- `PaymentService` / `PaymentTransactionService`: provider I/O outside the transaction, atomic payment+booking/membership state updates, safer retry/idempotency handling, negative staff reconciliation cases and clock-based paid timestamps.
+- `MembershipPaymentServiceTest`: separate membership payment, purpose, idempotent success callback and one-time membership activation.
 - Cross-module write transactions use `READ_COMMITTED` so lock acquisition is followed by a fresh availability read; the real-MySQL concurrency test caught and verified this boundary.
 
 ## 5. Known limitations
