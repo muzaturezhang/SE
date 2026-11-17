@@ -13,6 +13,31 @@
 - 截图：正式客户与 STAFF 页面截图位于 `docs/screenshots/final-2026-11-14/`，含桌面和移动视口。
 - 证据边界：本地环回 SMTP 已实测；外部 SMTP/Mailtrap 投递和 Q5/Q7 用户测试尚未收集，不能作为已完成的真实验证报告。
 
+## 本地正式使用与测试
+
+在 PowerShell 中运行：
+
+```powershell
+cd "C:\Users\Lenovo\Documents\ChatGPT\软件工程\SE"
+.\scripts\run-stage4.ps1
+```
+
+脚本使用项目内 JDK 17、持久化本地 H2 测试库 `data/local/stage4-use` 和随机生成的本地 STAFF 密码。服务就绪后打开：
+
+- 客户注册：<http://127.0.0.1:8080/account/register>
+- 客户预订：<http://127.0.0.1:8080/stays/new>
+- 客户订单：<http://127.0.0.1:8080/stays>
+- STAFF 登录：<http://127.0.0.1:8080/account/login>
+- STAFF 预订管理：<http://127.0.0.1:8080/admin/stays>
+
+STAFF 用户名为 `localstaff`，密码保存在：
+
+```powershell
+Get-Content .\.cache\staff-preview\password.txt
+```
+
+测试使用虚构姓名和 `@example.invalid` 邮箱。支付页面只连接 sandbox，不能输入真实银行卡或真实支付密码。停止服务时回到运行脚本的 PowerShell 窗口按 `Ctrl+C`。本地 H2 测试数据在脚本重启后保留；如需全新数据，可在服务停止后删除 `data/local/stage4-use.mv.db`。
+
 查询支持日期、房型和房间数量，并在后端校验输入、计算整个住期连续可用的房间。快速演示见 [房间查询与样例场景](docs/room-query-demo.md)。
 
 ## B 本地交接版本
