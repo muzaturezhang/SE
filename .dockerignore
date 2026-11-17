@@ -1,0 +1,12 @@
+.git
+.github
+.cache
+target
+data
+deliverables
+docs
+handoff
+log
+*.log
+.env
+.env.*

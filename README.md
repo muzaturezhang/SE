@@ -40,6 +40,8 @@ Get-Content .\.cache\staff-preview\password.txt
 
 队友统一使用说明见 [Group 6 成品使用与测试说明](docs/group6-team-testing-guide.md)。
 
+正式云部署步骤见 [Railway 部署说明](docs/deployment/railway.md)。
+
 查询支持日期、房型和房间数量，并在后端校验输入、计算整个住期连续可用的房间。快速演示见 [房间查询与样例场景](docs/room-query-demo.md)。
 
 ## B 本地交接版本
