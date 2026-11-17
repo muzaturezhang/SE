@@ -1,5 +1,7 @@
 # Holiday Resort Booking System
 
+**Group 6:** Nacy Lin, Muzature Zhang, Freya Wang, Mila Liu。
+
 团队共享的 Holiday Resort 预订 Web 工程，基于 Java 17、Spring Boot、Thymeleaf、H2/MySQL 8。当前正式客户流程已包含注册/登录、客房查询、实时报价、下单与库存占用、我的预订、改期、取消、sandbox 支付和会员费支付；正式 STAFF 流程已包含房间管理、真实预订列表/详情、筛选分页和支付结果核对。D 提供版本化 Flyway schema、H2/MySQL JDBC adapter、统一锁顺序、提醒/邮件端口、CI、JaCoCo 和可重复测试。B/A/C 的独立 preview 路由仍保留用于界面演示，但不再代表正式业务闭环。用户测试和外部邮箱投递仍需真实参与者和外部环境，仓库不会伪造这些证据。
 
 ## 当前正式功能
